@@ -7,26 +7,6 @@
 namespace MoveGenerator
 {
 
-// void Generate(const Board& board, MoveList& list)
-// {
-//     list.Clear();
-
-//     if(board.side == WHITE)
-//     {
-//         GenerateWhitePawnMoves(board, list);
-//     }
-//     else
-//     {
-//         GenerateBlackPawnMoves(board, list);
-//     }
-
-// GenerateKnightMoves(board, list);
-// GenerateBishopMoves(board, list);
-// GenerateRookMoves(board, list);
-// GenerateQueenMoves(board, list);
-// GenerateKingMoves(board, list);
-// }
-
 void Generate(const Board& board, MoveList& list)
 {
     list.Clear();
@@ -40,23 +20,44 @@ void Generate(const Board& board, MoveList& list)
         GenerateBlackPawnMoves(board, list);
     }
 
-    std::cout << "After pawns   : " << list.count << '\n';
-
-    GenerateKnightMoves(board, list);
-    std::cout << "After knights : " << list.count << '\n';
-
-    GenerateBishopMoves(board, list);
-    std::cout << "After bishops : " << list.count << '\n';
-
-    GenerateRookMoves(board, list);
-    std::cout << "After rooks   : " << list.count << '\n';
-
-    GenerateQueenMoves(board, list);
-    std::cout << "After queens  : " << list.count << '\n';
-
-    GenerateKingMoves(board, list);
-    std::cout << "After king    : " << list.count << '\n';
+GenerateKnightMoves(board, list);
+GenerateBishopMoves(board, list);
+GenerateRookMoves(board, list);
+GenerateQueenMoves(board, list);
+GenerateKingMoves(board, list);
 }
+
+// void Generate(const Board& board, MoveList& list)
+// {
+//     list.Clear();
+
+//     if(board.side == WHITE)
+//     {
+//         GenerateWhitePawnMoves(board, list);
+//     }
+//     else
+//     {
+//         GenerateBlackPawnMoves(board, list);
+//     }
+
+//     std::cout << "After pawns   : " << list.count << '\n';
+
+//     GenerateKnightMoves(board, list);
+//     std::cout << "After knights : " << list.count << '\n';
+
+//     GenerateBishopMoves(board, list);
+//     std::cout << "After bishops : " << list.count << '\n';
+
+//     GenerateRookMoves(board, list);
+//     std::cout << "After rooks   : " << list.count << '\n';
+
+//     GenerateQueenMoves(board, list);
+//     std::cout << "After queens  : " << list.count << '\n';
+
+//     GenerateKingMoves(board, list);
+//     std::cout << "After king    : " << list.count << '\n';
+// }
+
 
 void GenerateWhitePawnMoves(const Board& board, MoveList& list)
 {

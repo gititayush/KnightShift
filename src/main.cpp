@@ -1,38 +1,77 @@
-// 
 #include <iostream>
+#include <vector>
+#include <string>
 
 #include "AttackTables.h"
 #include "Board.h"
 #include "Perft.h"
-#include "Bitboard.h"
+
+struct PerftTest
+{
+    std::string name;
+    std::string fen;
+    std::vector<U64> expected;
+};
+
 int main()
 {
     AttackTables::Initialize();
 
-    Board board;
+    std::vector<PerftTest> tests =
+    {
+        {
+            "Kiwipete",
+            "r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - ",
+            {48ULL, 2039ULL, 97862ULL, 4085603ULL}
+        },
 
-    board.LoadFEN("r3k2r/p1ppqpb1/bn2pnp1/2pP4/1p2P3/2N2N2/PPQBBPPP/R3K2R w KQkq - 0 1");
+        {
+            "Position 6",
+            "rnbq1k1r/pp1Pbppp/2p5/8/2B5/8/PPP1NnPP/RNBQK2R w KQ - 1 8 ",
+            {46ULL, 2079ULL, 89890ULL, 3894594ULL}
+        }
+    };
 
-std::cout << "White Pawns   : " << Bitboard::CountBits(board.bitboards[WP]) << '\n';
-std::cout << "White Knights : " << Bitboard::CountBits(board.bitboards[WN]) << '\n';
-std::cout << "White Bishops : " << Bitboard::CountBits(board.bitboards[WB]) << '\n';
-std::cout << "White Rooks   : " << Bitboard::CountBits(board.bitboards[WR]) << '\n';
-std::cout << "White Queens  : " << Bitboard::CountBits(board.bitboards[WQ]) << '\n';
-std::cout << "White King    : " << Bitboard::CountBits(board.bitboards[WK]) << '\n';
+    for (const auto& test : tests)
+    {
+        Board board;
+        board.LoadFEN(test.fen);
 
-    board.Print();
+        std::cout << "\n=========================================\n";
+        std::cout << test.name << '\n';
+        std::cout << "=========================================\n";
 
-    // for (int depth = 1; depth <= 5; depth++)
-    // {
-    //     std::cout << "Depth "
-    //               << depth
-    //               << " : "
-    //               << Perft::Run(board, depth)
-    //               << '\n';
-    // }
-    
-    std::cout << "\n========== ROOT LEGAL MOVES ==========\n\n";
+        bool passed = true;
 
-    Perft::Divide(board, 1);
+        for (int depth = 1; depth <= 4; depth++)
+        {
+            U64 nodes = Perft::Run(board, depth);
+
+            std::cout << "Depth "
+                      << depth
+                      << " : "
+                      << nodes;
+
+            if (nodes == test.expected[depth - 1])
+            {
+                std::cout << "   PASS";
+            }
+            else
+            {
+                passed = false;
+
+                std::cout << "   FAIL (Expected "
+                          << test.expected[depth - 1]
+                          << ")";
+            }
+
+            std::cout << '\n';
+        }
+
+        std::cout << "\nResult : "
+                  << (passed ? "PASS" : "FAIL")
+                  << "\n";
+    }
+
     return 0;
 }
