@@ -5,10 +5,11 @@
 #include "Evaluation.h"
 #include "MoveGenerator.h"
 #include "TranspositionTable.h"
-
+#include <cstring>
 namespace Search
 {
 Move killerMoves[2][MAX_PLY] = {};
+int historyTable[12][64] = {};
 constexpr int INF = 1000000;
 constexpr int MATE_SCORE = 30000;
 
@@ -183,18 +184,26 @@ if(score > alpha)
 }
 
         if(alpha >= beta)
-        {
-            if(!MoveEncoding::IsCapture(move))
             {
-                killerMoves[1][ply] =
-                    killerMoves[0][ply];
+                if(!MoveEncoding::IsCapture(move))
+                {
+                    killerMoves[1][ply] =
+                        killerMoves[0][ply];
 
-                killerMoves[0][ply] =
-                    move;
+                    killerMoves[0][ply] =
+                        move;
+
+                    Piece piece =
+                        MoveEncoding::PieceMoved(move);
+
+                    Square to =
+                        MoveEncoding::To(move);
+
+                    historyTable[piece][to] += depth * depth;
+                }
+
+                break;
             }
-
-            break;
-        }
     }
 
     if(legalMoves == 0)
@@ -240,6 +249,11 @@ return alpha;
 
 Move FindBestMove(Board& board, int depth)
 {
+    std::memset(
+        historyTable,
+        0,
+        sizeof(historyTable));
+
     Move bestMove = 0;
 
     for(int currentDepth = 1;

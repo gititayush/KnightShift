@@ -24,13 +24,21 @@ int ScoreMove(
         if(move == ttMove)
         return 1000000;
         if(!MoveEncoding::IsCapture(move))
-{
-    if(move == Search::killerMoves[0][ply])
-        return 900000;
+            {
+                if(move == Search::killerMoves[0][ply])
+                    return 900000;
 
-    if(move == Search::killerMoves[1][ply])
-        return 800000;
-}
+                if(move == Search::killerMoves[1][ply])
+                    return 800000;
+
+                Piece piece =
+                    MoveEncoding::PieceMoved(move);
+
+                Square to =
+                    MoveEncoding::To(move);
+
+                return Search::historyTable[piece][to];
+            }
     if(MoveEncoding::IsCapture(move))
     {
         int attacker =
