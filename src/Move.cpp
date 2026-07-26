@@ -120,4 +120,45 @@ void Print(Move move)
     std::cout << '\n';
 }
 
+std::string ToString(Move move)
+{
+    std::string result;
+
+    result += SquareToString(From(move));
+    result += SquareToString(To(move));
+
+    Piece promo = PromotionPiece(move);
+
+    if(promo != NO_PIECE)
+    {
+        switch(promo)
+        {
+            case WQ:
+            case BQ:
+                result += 'q';
+                break;
+
+            case WR:
+            case BR:
+                result += 'r';
+                break;
+
+            case WB:
+            case BB:
+                result += 'b';
+                break;
+
+            case WN:
+            case BN:
+                result += 'n';
+                break;
+
+            default:
+                break;
+        }
+    }
+
+    return result;
+}
+
 }

@@ -38,4 +38,6 @@ namespace MoveEncoding
     std::string SquareToString(Square square);
 
     void Print(Move move);
+
+    std::string ToString(Move move);
 }

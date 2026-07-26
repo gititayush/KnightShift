@@ -7,6 +7,18 @@
 namespace MoveGenerator
 {
 
+// inline bool IsEnemyKing(const Board& board, int square)
+// {
+//     Piece piece = board.pieceOnSquare[square];
+
+//     if (board.side == WHITE)
+//         return piece == BK;
+
+//     return piece == WK;
+// }
+
+
+
 void Generate(const Board& board, MoveList& list)
 {
     list.Clear();
@@ -126,6 +138,11 @@ if(to <= H8 &&
     int target = __builtin_ctzll(attacks);
 
     attacks &= attacks - 1;
+
+    Piece targetPiece = board.pieceOnSquare[target];
+
+if(targetPiece == BK)
+    continue;
 
     // Promotion capture
     if(target >= A8)
@@ -276,6 +293,11 @@ if(to >= A1 &&
 
     attacks &= attacks - 1;
 
+    Piece targetPiece = board.pieceOnSquare[target];
+
+if(targetPiece == WK)
+    continue;
+
     // Promotion capture
     if(target <= H1)
     {
@@ -398,6 +420,11 @@ void GenerateKnightMoves(const Board& board, MoveList& list)
                     WHITE
                 ] &
                 (1ULL << to);
+            
+            Piece target = board.pieceOnSquare[to];
+
+            if(target == (board.side == WHITE ? BK : WK))
+                continue;
 
             list.Add(
                 MoveEncoding::Encode(
@@ -455,20 +482,25 @@ void GenerateBishopMoves(const Board& board, MoveList& list)
                 if(friendly & square)
                     break;
 
-                bool capture = enemy & square;
+                Piece target = board.pieceOnSquare[to];
 
-                list.Add(
-                    MoveEncoding::Encode(
-                        (Square)from,
-                        (Square)to,
-                        board.side == WHITE ? WB : BB,
-                        NO_PIECE,
-                        capture
-                    )
-                );
+if(target == (board.side == WHITE ? BK : WK))
+    break;
 
-                if(capture)
-                    break;
+bool capture = enemy & square;
+
+list.Add(
+    MoveEncoding::Encode(
+        (Square)from,
+        (Square)to,
+        board.side == WHITE ? WB : BB,
+        NO_PIECE,
+        capture
+    )
+);
+
+if(capture)
+    break;
 
                 r += dr[dir];
                 f += df[dir];
@@ -522,21 +554,25 @@ void GenerateRookMoves(const Board& board, MoveList& list)
     break;
 }
 
-                bool capture = enemy & square;
+                Piece target = board.pieceOnSquare[to];
 
-                list.Add(
-                    MoveEncoding::Encode(
-                        (Square)from,
-                        (Square)to,
-                        board.side == WHITE ? WR : BR,
-                        NO_PIECE,
-                        capture
-                    )
-                );
+if(target == (board.side == WHITE ? BK : WK))
+    break;
 
-                if(capture)
-                    break;
+bool capture = enemy & square;
 
+list.Add(
+    MoveEncoding::Encode(
+        (Square)from,
+        (Square)to,
+        board.side == WHITE ? WR : BR,
+        NO_PIECE,
+        capture
+    )
+);
+
+if(capture)
+    break;
                 r += dr[dir];
                 f += df[dir];
             }
@@ -586,20 +622,25 @@ void GenerateQueenMoves(const Board& board, MoveList& list)
                 if(friendly & square)
                     break;
 
-                bool capture = (enemy & square);
+                Piece target = board.pieceOnSquare[to];
 
-                list.Add(
-                    MoveEncoding::Encode(
-                        (Square)from,
-                        (Square)to,
-                        board.side == WHITE ? WQ : BQ,
-                        NO_PIECE,
-                        capture
-                    )
-                );
+if(target == (board.side == WHITE ? BK : WK))
+    break;
 
-                if(capture)
-                    break;
+bool capture = (enemy & square);
+
+list.Add(
+    MoveEncoding::Encode(
+        (Square)from,
+        (Square)to,
+        board.side == WHITE ? WQ : BQ,
+        NO_PIECE,
+        capture
+    )
+);
+
+if(capture)
+    break;
 
                 r += dr[dir];
                 f += df[dir];
@@ -642,6 +683,11 @@ void GenerateKingMoves(const Board& board, MoveList& list)
 
             bool capture =
                 (enemy & (1ULL << to));
+
+            Piece target = board.pieceOnSquare[to];
+
+if(target == (board.side == WHITE ? BK : WK))
+    continue;
 
             list.Add(
                 MoveEncoding::Encode(

@@ -139,6 +139,9 @@ bool Board::MakeMove(Move move, UndoInfo& undo){
 
     Piece captured = pieceOnSquare[to];
 
+    if (captured == WK || captured == BK)
+    return false;
+
     undo.capturedPiece = captured;
 
     undo.capturedSquare = to;

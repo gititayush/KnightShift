@@ -1,7 +1,5 @@
 #include "Search.h"
 
-#include <iostream>
-
 #include "AttackDetector.h"
 #include "Evaluation.h"
 #include "MoveGenerator.h"
@@ -19,8 +17,6 @@ int Negamax(
     int alpha,
     int beta)
 {
-
-
     if(depth == 0)
         return Evaluation::Evaluate(board);
 
@@ -34,26 +30,28 @@ int Negamax(
         Move move = moves.moves[i];
 
         UndoInfo undo;
-        board.MakeMove(move, undo);
+
+        if(!board.MakeMove(move, undo))
+            continue;
 
         Side mover = (board.side == WHITE) ? BLACK : WHITE;
         Square kingSquare = board.FindKing(mover);
 
         if(AttackDetector::IsSquareAttacked(board, kingSquare, board.side))
-{
-
-    board.UndoMove(move, undo);
-    continue;
-}
+        {
+            board.UndoMove(move, undo);
+            continue;
+        }
 
         legalMoves++;
 
-        int score = -Negamax(
-            board,
-            depth - 1,
-            ply + 1,
-            -beta,
-            -alpha);
+        int score =
+            -Negamax(
+                board,
+                depth - 1,
+                ply + 1,
+                -beta,
+                -alpha);
 
         board.UndoMove(move, undo);
 
@@ -85,89 +83,45 @@ int Negamax(
 Move FindBestMove(Board& board, int depth)
 {
     MoveList moves;
-
     MoveGenerator::Generate(board, moves);
-
-    MoveList legalMoveList;
-    legalMoveList.count = 0;
-
 
     Move bestMove = 0;
     int bestScore = -INF;
-    int legalMoves = 0;
-    for (int i = 0; i < moves.count; i++)
+
+    for(int i = 0; i < moves.count; i++)
     {
         Move move = moves.moves[i];
 
         UndoInfo undo;
 
-        board.MakeMove(move, undo);
+        if(!board.MakeMove(move, undo))
+            continue;
 
         Side mover = (board.side == WHITE) ? BLACK : WHITE;
         Square kingSquare = board.FindKing(mover);
 
-        if (AttackDetector::IsSquareAttacked(board, kingSquare, board.side))
+        if(AttackDetector::IsSquareAttacked(board, kingSquare, board.side))
         {
             board.UndoMove(move, undo);
             continue;
         }
-        legalMoves++;
-        legalMoveList.moves[legalMoveList.count++] = move;
 
-int score = -Negamax(
-    board,
-    depth - 1,
-    1,
-    -INF,
-    INF);
+        int score =
+            -Negamax(
+                board,
+                depth - 1,
+                1,
+                -INF,
+                INF);
 
         board.UndoMove(move, undo);
 
-        MoveEncoding::Print(move);
-        std::cout << "  Search Score = " << score << '\n';
-
-        if (score > bestScore)
+        if(score > bestScore)
         {
             bestScore = score;
             bestMove = move;
         }
     }
-
-
-if (legalMoves == 0)
-{
-    Square kingSquare = board.FindKing(board.side);
-
-    std::cout << "\n========== GAME OVER ==========\n";
-
-    if (AttackDetector::IsSquareAttacked(
-            board,
-            kingSquare,
-            board.side == WHITE ? BLACK : WHITE))
-    {
-        std::cout << "Checkmate!\n";
-    }
-    else
-    {
-        std::cout << "Stalemate!\n";
-    }
-
-    std::cout << "No legal moves available.\n";
-
-    return 0;
-}
-
-std::cout << "\nLegal moves:\n";
-
-for (int i = 0; i < legalMoveList.count; i++)
-{
-    MoveEncoding::Print(legalMoveList.moves[i]);
-    std::cout << '\n';
-}
-
-std::cout << '\n';
-
-    std::cout << "\nBest Score = " << bestScore << '\n';
 
     return bestMove;
 }
