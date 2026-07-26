@@ -3,6 +3,7 @@
 #include "AttackDetector.h"
 #include <iostream>
 #include <sstream>
+#include "Zobrist.h"
 
 Board::Board()
 {
@@ -126,6 +127,7 @@ bool Board::LoadFEN(const std::string& fen)
         occupancies[WHITE] |
         occupancies[BLACK];
 
+hashKey = Zobrist::GenerateHash(*this);
     return true;
 }
 
@@ -333,7 +335,7 @@ if(MoveEncoding::IsDoublePush(move))
         side == WHITE ?
         BLACK :
         WHITE;
-
+hashKey = Zobrist::GenerateHash(*this);
     return true;
 }
 
@@ -443,6 +445,7 @@ if (MoveEncoding::IsCastling(move))
     enPassant = undo.enPassant;
     halfmoveClock = undo.halfmoveClock;
     fullmoveNumber = undo.fullmoveNumber;
+    hashKey = Zobrist::GenerateHash(*this);
 }
 
 Square Board::FindKing(Side side) const

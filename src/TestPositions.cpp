@@ -1,9 +1,9 @@
 #include "TestPositions.h"
-
+#include "TranspositionTable.h"
 #include <fstream>
 #include <iostream>
 #include <string>
-
+#include <sstream>
 #include "Board.h"
 #include "Move.h"
 #include "Search.h"
@@ -76,8 +76,20 @@ void RunTACTests(int depth)
         std::string engineMove =
             MoveEncoding::ToString(best);
 
-        bool ok =
-            engineMove == test.bestMove;
+  bool ok = false;
+
+std::stringstream ss(test.bestMove);
+
+std::string move;
+
+while (ss >> move)
+{
+    if (engineMove == move)
+    {
+        ok = true;
+        break;
+    }
+}
 
         if(ok)
             passed++;
@@ -111,4 +123,14 @@ void RunTACTests(int depth)
 
     std::cout
         << "==============================\n";
+
+        std::cout
+    << "TT Probes : "
+    << TT::probes
+    << '\n';
+
+std::cout
+    << "TT Hits   : "
+    << TT::hits
+    << '\n';
 }

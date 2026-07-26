@@ -43,6 +43,8 @@ public:
     // Castling rights
     int castling;
 
+    U64 hashKey;
+
     // 50 move rule
     int halfmoveClock;
 

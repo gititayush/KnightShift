@@ -19,8 +19,9 @@ namespace MoveGenerator
 
 
 
-void Generate(const Board& board, MoveList& list)
-{
+void Generate(const Board& board,MoveList& list)
+    
+    {
     list.Clear();
 
     if(board.side == WHITE)
@@ -32,11 +33,11 @@ void Generate(const Board& board, MoveList& list)
         GenerateBlackPawnMoves(board, list);
     }
 
-GenerateKnightMoves(board, list);
-GenerateBishopMoves(board, list);
-GenerateRookMoves(board, list);
-GenerateQueenMoves(board, list);
-GenerateKingMoves(board, list);
+    GenerateKnightMoves(board, list);
+    GenerateBishopMoves(board, list);
+    GenerateRookMoves(board, list);
+    GenerateQueenMoves(board, list);
+    GenerateKingMoves(board, list);
 }
 
 // void Generate(const Board& board, MoveList& list)
@@ -420,7 +421,8 @@ void GenerateKnightMoves(const Board& board, MoveList& list)
                     WHITE
                 ] &
                 (1ULL << to);
-            
+        
+
             Piece target = board.pieceOnSquare[to];
 
             if(target == (board.side == WHITE ? BK : WK))
@@ -461,51 +463,35 @@ void GenerateBishopMoves(const Board& board, MoveList& list)
         int from = __builtin_ctzll(bishops);
         bishops &= bishops - 1;
 
-        int startRank = from / 8;
-        int startFile = from % 8;
-
-        const int dr[4] = {1, 1, -1, -1};
-        const int df[4] = {1, -1, 1, -1};
-
-        for(int dir = 0; dir < 4; dir++)
-        {
-            int r = startRank + dr[dir];
-            int f = startFile + df[dir];
-
-            while(r >= 0 && r < 8 &&
-                  f >= 0 && f < 8)
-            {
-                int to = r * 8 + f;
-
-                U64 square = 1ULL << to;
-
-                if(friendly & square)
-                    break;
-
-                Piece target = board.pieceOnSquare[to];
-
-if(target == (board.side == WHITE ? BK : WK))
-    break;
-
-bool capture = enemy & square;
-
-list.Add(
-    MoveEncoding::Encode(
+        U64 attacks =
+    AttackTables::BishopAttacks(
         (Square)from,
-        (Square)to,
-        board.side == WHITE ? WB : BB,
-        NO_PIECE,
-        capture
-    )
-);
+        board.occupancies[BOTH]);
 
-if(capture)
-    break;
+attacks &= ~friendly;
 
-                r += dr[dir];
-                f += df[dir];
-            }
-        }
+while(attacks)
+{
+    int to = __builtin_ctzll(attacks);
+    attacks &= attacks - 1;
+
+    Piece target = board.pieceOnSquare[to];
+
+    if(target == (board.side == WHITE ? BK : WK))
+        continue;
+
+    bool capture = enemy & (1ULL << to);
+
+    list.Add(
+        MoveEncoding::Encode(
+            (Square)from,
+            (Square)to,
+            board.side == WHITE ? WB : BB,
+            NO_PIECE,
+            capture
+        )
+    );
+}
     }
 }
 
@@ -532,51 +518,36 @@ void GenerateRookMoves(const Board& board, MoveList& list)
         int from = __builtin_ctzll(rooks);
         rooks &= rooks - 1;
 
-        int startRank = from / 8;
-        int startFile = from % 8;
-
-        const int dr[4] = {1, -1, 0, 0};
-        const int df[4] = {0, 0, 1, -1};
-
-        for(int dir = 0; dir < 4; dir++)
-        {
-            int r = startRank + dr[dir];
-            int f = startFile + df[dir];
-
-            while(r >= 0 && r < 8 &&
-                  f >= 0 && f < 8)
-            {
-                int to = r * 8 + f;
-
-                U64 square = 1ULL << to;
-                if(friendly & square)
-{
-    break;
-}
-
-                Piece target = board.pieceOnSquare[to];
-
-if(target == (board.side == WHITE ? BK : WK))
-    break;
-
-bool capture = enemy & square;
-
-list.Add(
-    MoveEncoding::Encode(
+        U64 attacks =
+    AttackTables::RookAttacks(
         (Square)from,
-        (Square)to,
-        board.side == WHITE ? WR : BR,
-        NO_PIECE,
-        capture
-    )
-);
+        board.occupancies[BOTH]);
 
-if(capture)
-    break;
-                r += dr[dir];
-                f += df[dir];
-            }
-        }
+attacks &= ~friendly;
+
+while(attacks)
+{
+    int to = __builtin_ctzll(attacks);
+    attacks &= attacks - 1;
+
+    Piece target = board.pieceOnSquare[to];
+
+    if(target == (board.side == WHITE ? BK : WK))
+        continue;
+
+    bool capture =
+        enemy & (1ULL << to);
+
+    list.Add(
+        MoveEncoding::Encode(
+            (Square)from,
+            (Square)to,
+            board.side == WHITE ? WR : BR,
+            NO_PIECE,
+            capture
+        )
+    );
+}
     }
 }
 void GenerateQueenMoves(const Board& board, MoveList& list)
@@ -604,48 +575,36 @@ void GenerateQueenMoves(const Board& board, MoveList& list)
         int from = __builtin_ctzll(queens);
         queens &= queens - 1;
 
-        int startRank = from / 8;
-        int startFile = from % 8;
-
-        for(int dir = 0; dir < 8; dir++)
-        {
-            int r = startRank + dr[dir];
-            int f = startFile + df[dir];
-
-            while(r >= 0 && r < 8 &&
-                  f >= 0 && f < 8)
-            {
-                int to = r * 8 + f;
-
-                U64 square = 1ULL << to;
-
-                if(friendly & square)
-                    break;
-
-                Piece target = board.pieceOnSquare[to];
-
-if(target == (board.side == WHITE ? BK : WK))
-    break;
-
-bool capture = (enemy & square);
-
-list.Add(
-    MoveEncoding::Encode(
+U64 attacks =
+    AttackTables::QueenAttacks(
         (Square)from,
-        (Square)to,
-        board.side == WHITE ? WQ : BQ,
-        NO_PIECE,
-        capture
-    )
-);
+        board.occupancies[BOTH]);
 
-if(capture)
-    break;
+attacks &= ~friendly;
 
-                r += dr[dir];
-                f += df[dir];
-            }
-        }
+while(attacks)
+{
+    int to = __builtin_ctzll(attacks);
+    attacks &= attacks - 1;
+
+    Piece target = board.pieceOnSquare[to];
+
+    if(target == (board.side == WHITE ? BK : WK))
+        continue;
+
+    bool capture =
+        enemy & (1ULL << to);
+
+    list.Add(
+        MoveEncoding::Encode(
+            (Square)from,
+            (Square)to,
+            board.side == WHITE ? WQ : BQ,
+            NO_PIECE,
+            capture
+        )
+    );
+}
     }
 }
 

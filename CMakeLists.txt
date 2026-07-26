@@ -20,6 +20,10 @@ add_executable(
     src/AttackDetector.cpp
     src/Perft.cpp
     src/TestPositions.cpp
+    src/MoveOrdering.cpp
+    src/Zobrist.cpp
+    src/TranspositionTable.cpp
+    src/PieceSquareTables.cpp
 )
 
 target_include_directories(

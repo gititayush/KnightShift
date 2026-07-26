@@ -119,3 +119,121 @@ void AttackTables::Initialize()
             MaskKingAttacks(static_cast<Square>(square));
     }
 }
+U64 AttackTables::BishopAttacks(
+    Square square,
+    U64 occupancy)
+{
+    U64 attacks = 0ULL;
+
+    int rank = square / 8;
+    int file = square % 8;
+
+    // North-East
+    for(int r = rank + 1, f = file + 1;
+        r < 8 && f < 8;
+        r++, f++)
+    {
+        int sq = r * 8 + f;
+
+        attacks |= (1ULL << sq);
+
+        if(occupancy & (1ULL << sq))
+            break;
+    }
+
+    // North-West
+    for(int r = rank + 1, f = file - 1;
+        r < 8 && f >= 0;
+        r++, f--)
+    {
+        int sq = r * 8 + f;
+
+        attacks |= (1ULL << sq);
+
+        if(occupancy & (1ULL << sq))
+            break;
+    }
+
+    // South-East
+    for(int r = rank - 1, f = file + 1;
+        r >= 0 && f < 8;
+        r--, f++)
+    {
+        int sq = r * 8 + f;
+
+        attacks |= (1ULL << sq);
+
+        if(occupancy & (1ULL << sq))
+            break;
+    }
+
+    // South-West
+    for(int r = rank - 1, f = file - 1;
+        r >= 0 && f >= 0;
+        r--, f--)
+    {
+        int sq = r * 8 + f;
+
+        attacks |= (1ULL << sq);
+
+        if(occupancy & (1ULL << sq))
+            break;
+    }
+
+    return attacks;
+}
+U64 AttackTables::RookAttacks(
+    Square square,
+    U64 occupancy)
+{
+    U64 attacks = 0ULL;
+
+    int rank = square / 8;
+    int file = square % 8;
+
+    // North
+    for(int r = rank + 1; r < 8; r++)
+    {
+        int sq = r * 8 + file;
+
+        attacks |= (1ULL << sq);
+
+        if(occupancy & (1ULL << sq))
+            break;
+    }
+
+    // South
+    for(int r = rank - 1; r >= 0; r--)
+    {
+        int sq = r * 8 + file;
+
+        attacks |= (1ULL << sq);
+
+        if(occupancy & (1ULL << sq))
+            break;
+    }
+
+    // East
+    for(int f = file + 1; f < 8; f++)
+    {
+        int sq = rank * 8 + f;
+
+        attacks |= (1ULL << sq);
+
+        if(occupancy & (1ULL << sq))
+            break;
+    }
+
+    // West
+    for(int f = file - 1; f >= 0; f--)
+    {
+        int sq = rank * 8 + f;
+
+        attacks |= (1ULL << sq);
+
+        if(occupancy & (1ULL << sq))
+            break;
+    }
+
+    return attacks;
+}

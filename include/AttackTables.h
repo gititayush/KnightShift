@@ -14,5 +14,21 @@ namespace AttackTables
 
     U64 MaskKingAttacks(Square square);
 
-    void Initialize();
+U64 BishopAttacks(
+    Square square,
+    U64 occupancy);
+
+U64 RookAttacks(
+    Square square,
+    U64 occupancy);
+
+inline U64 QueenAttacks(
+    Square square,
+    U64 occupancy)
+{
+    return BishopAttacks(square, occupancy) |
+           RookAttacks(square, occupancy);
+}
+
+void Initialize();
 }
