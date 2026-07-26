@@ -1,22 +1,40 @@
-# KnightShift
+# KnightShift ♞
 
-A chess engine written from scratch in modern C++.
+KnightShift is a chess engine written completely from scratch in modern C++. The project focuses on implementing classical chess engine algorithms from the ground up, with an emphasis on correctness, search techniques, and performance optimization.
+
+---
 
 ## Features
 
+### Board Representation
 - Bitboard-based board representation
 - FEN parsing
-- Legal move generation
-- Castling
-- En passant
-- Pawn promotion
-- Promotion captures
-- Check detection
 - MakeMove / UndoMove
-- Perft testing
-- UCI interface (in progress)
 
-## Perft Results
+### Move Generation
+- Legal move generation
+- Check detection
+- Castling
+- En Passant
+- Pawn Promotion
+- Promotion captures
+
+### Search
+- Negamax Search
+- Alpha-Beta Pruning
+- Basic Material Evaluation
+
+### Testing
+- Official Perft Suite
+- Win At Chess (WAC) Tactical Test Suite
+
+---
+
+# Perft Validation
+
+KnightShift passes all six official Perft positions from the Chess Programming Wiki.
+
+### Initial Position
 
 | Depth | Nodes |
 |------:|-------------:|
@@ -27,34 +45,79 @@ A chess engine written from scratch in modern C++.
 | 5 | 4,865,609 |
 | 6 | 119,060,324 |
 
-Verified against the official Chess Programming Wiki perft values.
+**Status**
 
-## Tech Stack
+✅ Passed all 6 official Perft positions.
 
-- C++17
+---
+
+# Tactical Strength
+
+Current benchmark:
+
+**Win At Chess (WAC)**
+
+Search Depth: **6**
+
+Official Score:
+
+```
+132 / 300
+```
+
+Accounting for positions with multiple accepted best moves:
+
+```
+151 / 300
+```
+
+---
+
+# Tech Stack
+
+- C++20
 - CMake
 - Bitboards
 - VS Code
 
-## Roadmap
+---
+
+# Roadmap
+
+## Engine Core
 
 - [x] Bitboards
-- [x] Move generation
-- [x] Legal move validation
+- [x] FEN Parsing
+- [x] Move Encoding
+- [x] Legal Move Generation
+- [x] MakeMove / UndoMove
+- [x] Attack Detection
 - [x] Castling
-- [x] En passant
-- [x] Promotions
-- [x] Perft
-- [ ] Evaluation
-- [ ] Negamax
-- [ ] Alpha-Beta Pruning
-- [ ] Move Ordering
+- [x] En Passant
+- [x] Pawn Promotions
+
+## Search
+
+- [x] Negamax
+- [x] Alpha-Beta Pruning
+- [x] Material Evaluation
+- [x] Automated Perft Testing
+- [x] Automated WAC Tactical Testing
+
+## Planned
+
 - [ ] Quiescence Search
-- [ ] Transposition Tables
-- [ ] Iterative Deepening
-- [ ] UCI Support
+- [ ] MVV-LVA Move Ordering
 - [ ] Piece-Square Tables
+- [ ] Killer Heuristic
+- [ ] History Heuristic
+- [ ] Iterative Deepening
+- [ ] Transposition Table
+- [ ] UCI Protocol
+- [ ] Web Interface
 
-## Author
+---
 
-Built by Ayush.
+# Author
+
+Built by **Ayush**.
