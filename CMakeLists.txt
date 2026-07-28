@@ -24,6 +24,7 @@ add_executable(
     src/Zobrist.cpp
     src/TranspositionTable.cpp
     src/PieceSquareTables.cpp
+    src/SearchStats.cpp
 )
 
 target_include_directories(

@@ -10,17 +10,23 @@ namespace Search
 
     extern Move killerMoves[2][MAX_PLY];
 
+    constexpr int MAX_DEPTH = 64;
+
+    extern Move pvTable[MAX_DEPTH][MAX_DEPTH];
+
+    extern int pvLength[MAX_DEPTH];
+
     extern int historyTable[12][64];
 
     Move FindBestMove(Board& board, int depth);
 
-    int Negamax(
-        Board& board,
-        int depth,
-        int ply,
-        int alpha,
-        int beta
-    );
+int Negamax(
+    Board& board,
+    int depth,
+    int ply,
+    int alpha,
+    int beta,
+    bool allowNullMove = true);
 
     int Quiescence(
         Board& board,

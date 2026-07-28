@@ -1,4 +1,5 @@
 #include "TranspositionTable.h"
+#include "SearchStats.h"
 
 constexpr int TABLE_SIZE = 1 << 20;
 
@@ -34,6 +35,7 @@ bool TT::Probe(
     int beta,
     int& score)
 {
+    SearchStats::ttProbes++;
     probes++;
     Entry& entry =
         table[hash % TABLE_SIZE];
@@ -47,6 +49,7 @@ bool TT::Probe(
     switch(entry.flag)
 {
     case EXACT:
+        SearchStats::ttHits++;
         score = entry.score;
             hits++;
         return true;
@@ -54,6 +57,7 @@ bool TT::Probe(
     case ALPHA:
         if(entry.score <= alpha)
         {
+            SearchStats::ttHits++;
             score = entry.score;
                 hits++;
             return true;
@@ -63,6 +67,7 @@ bool TT::Probe(
     case BETA:
         if(entry.score >= beta)
         {
+            SearchStats::ttHits++;
             score = entry.score;
                 hits++;
             return true;

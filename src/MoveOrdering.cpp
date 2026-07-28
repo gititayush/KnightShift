@@ -15,6 +15,16 @@ constexpr int MVVLVA[6][6] =
     {100,200,300,400,500,600}  // King attacker
 };
 
+constexpr int PieceValue[6] =
+{
+    100,
+    320,
+    330,
+    500,
+    900,
+    20000
+};
+
 int ScoreMove(
     const Board& board,
     Move move,
@@ -37,20 +47,36 @@ int ScoreMove(
                 Square to =
                     MoveEncoding::To(move);
 
-                return Search::historyTable[piece][to];
-            }
+                return 700000 + Search::historyTable[piece][to];            }
     if(MoveEncoding::IsCapture(move))
+{
+    int attacker =
+        static_cast<int>(
+            MoveEncoding::PieceMoved(move)) % 6;
+
+    int victim =
+        static_cast<int>(
+            board.pieceOnSquare[
+                MoveEncoding::To(move)]) % 6;
+
+    int score =
+        MVVLVA[attacker][victim];
+
+    if(PieceValue[victim] > PieceValue[attacker])
     {
-        int attacker =
-            static_cast<int>(MoveEncoding::PieceMoved(move)) % 6;
+        score += 50000;      // Winning capture
+    }
+    else if(PieceValue[victim] == PieceValue[attacker])
+    {
+        score += 25000;      // Equal capture
+    }
+    else
+    {
+        score -= 25000;      // Losing capture
+    }
 
-        int victim =
-            static_cast<int>(
-                 board.pieceOnSquare[
-                     MoveEncoding::To(move)
-        ]) % 6;
-
-return 100000 + MVVLVA[attacker][victim];    }
+    return 100000 + score;
+}
 
     return 0;
 }

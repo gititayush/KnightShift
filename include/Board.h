@@ -3,8 +3,18 @@
 #include <string>
 
 #include "Types.h"
-
 #include "Move.h"
+
+struct NullUndo
+{
+    Square enPassant;
+
+    int castling;
+
+    int halfmoveClock;
+
+    int fullmoveNumber;
+};
 
 struct UndoInfo
 {
@@ -21,6 +31,7 @@ struct UndoInfo
 
     int fullmoveNumber;
 };
+
 class Board
 {
 public:
@@ -59,12 +70,14 @@ public:
 
     bool MakeMove(Move move, UndoInfo& undo);
 
-    Square FindKing(Side side) const;
-
-
     void UndoMove(Move move, const UndoInfo& undo);
 
-    
+    void MakeNullMove(NullUndo& undo);
+
+    void UndoNullMove(const NullUndo& undo);
+
+    Square FindKing(Side side) const;
+
     Move ParseMove(const std::string& moveText) const;
 
     void Print() const;

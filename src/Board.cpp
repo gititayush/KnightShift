@@ -461,6 +461,47 @@ Square Board::FindKing(Side side) const
     return (Square)__builtin_ctzll(kings);
 }
 
+
+void Board::MakeNullMove(NullUndo& undo)
+{
+    undo.enPassant = enPassant;
+    undo.castling = castling;
+    undo.halfmoveClock = halfmoveClock;
+    undo.fullmoveNumber = fullmoveNumber;
+
+    if(enPassant != NO_SQUARE)
+        hashKey ^= Zobrist::EnPassantKeys[enPassant];
+
+    enPassant = NO_SQUARE;
+
+    side = (side == WHITE)
+        ? BLACK
+        : WHITE;
+
+    hashKey ^= Zobrist::SideKey;
+
+    halfmoveClock++;
+}
+
+void Board::UndoNullMove(const NullUndo& undo)
+{
+    side = (side == WHITE)
+        ? BLACK
+        : WHITE;
+
+    hashKey ^= Zobrist::SideKey;
+
+    enPassant = undo.enPassant;
+
+    if(enPassant != NO_SQUARE)
+        hashKey ^= Zobrist::EnPassantKeys[enPassant];
+
+    castling = undo.castling;
+    halfmoveClock = undo.halfmoveClock;
+    fullmoveNumber = undo.fullmoveNumber;
+}
+
+
 Move Board::ParseMove(const std::string& moveText) const
 {
     if(moveText.length() != 4 &&

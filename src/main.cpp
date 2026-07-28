@@ -1,5 +1,10 @@
-#include "AttackTables.h"
+#include <iostream>
 #include "TestPositions.h"
+#include "AttackTables.h"
+#include "Board.h"
+#include "Move.h"
+#include "Search.h"
+#include "SearchStats.h"
 #include "TranspositionTable.h"
 #include "Zobrist.h"
 
@@ -13,6 +18,31 @@ int main()
 
     return 0;
 }
+
+// int main()
+// {
+//     AttackTables::Initialize();
+//     Zobrist::Initialize();
+//     TT::Initialize();
+
+//     Board board;
+
+//     board.LoadFEN(
+//         "r2rb1k1/pp1q1p1p/2n1p1p1/2bp4/5P2/PP1BPR1Q/1BPN2PP/R5K1 w - - 0 1");
+
+//     Move best =
+//         Search::FindBestMove(board, 5);
+
+//     std::cout
+//         << "Best move: "
+//         << MoveEncoding::ToString(best)
+//         << '\n';
+
+//     SearchStats::Print();
+
+//     return 0;
+// }
+
 
 
 //============================

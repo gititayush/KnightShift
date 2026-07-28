@@ -7,6 +7,7 @@
 #include "Board.h"
 #include "Move.h"
 #include "Search.h"
+#include "SearchStats.h"
 
 static bool ParseEPDLine(const std::string& line, TacticalPosition& pos)
 {
@@ -123,6 +124,8 @@ while (ss >> move)
 
     std::cout
         << "==============================\n";
+
+        SearchStats::Print();
 
         std::cout
     << "TT Probes : "
