@@ -1,38 +1,37 @@
 #include "SEE.h"
 
-namespace SEE
+#include "Move.h"
+static constexpr int PieceValue[6] =
 {
-
-constexpr int PieceValue[12] =
-{
-    100,    // White Pawn
-    320,    // White Knight
-    330,    // White Bishop
-    500,    // White Rook
-    900,    // White Queen
-    20000,  // White King
-
-    100,    // Black Pawn
-    320,    // Black Knight
-    330,    // Black Bishop
-    500,    // Black Rook
-    900,    // Black Queen
-    20000   // Black King
+    100,
+    320,
+    330,
+    500,
+    900,
+    20000
 };
 
-int Evaluate(
+bool SEE::IsGoodCapture(
     const Board& board,
     Move move)
 {
-    Piece captured =
-        board.pieceOnSquare[
-            MoveEncoding::To(move)];
+    if(!MoveEncoding::IsCapture(move))
+        return true;
 
     Piece attacker =
         MoveEncoding::PieceMoved(move);
 
-    return PieceValue[captured]
-         - PieceValue[attacker];
-}
+    Piece victim =
+        board.pieceOnSquare[
+            MoveEncoding::To(move)];
 
+    int attackerValue =
+        PieceValue[
+            static_cast<int>(attacker) % 6];
+
+    int victimValue =
+        PieceValue[
+            static_cast<int>(victim) % 6];
+
+    return victimValue >= attackerValue;
 }

@@ -9,5 +9,6 @@ namespace MoveOrdering
         const Board& board,
         Move move,
         Move ttMove = 0,
+        Move previousMove = 0,
         int ply = 0);
 }

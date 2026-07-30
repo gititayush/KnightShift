@@ -18,6 +18,10 @@ namespace Search
 
     extern int historyTable[12][64];
 
+    extern int continuationHistory
+        [12][64]
+        [12][64];
+
     Move FindBestMove(Board& board, int depth);
 
 int Negamax(
@@ -26,6 +30,7 @@ int Negamax(
     int ply,
     int alpha,
     int beta,
+    Move previousMove,
     bool allowNullMove = true);
 
     int Quiescence(

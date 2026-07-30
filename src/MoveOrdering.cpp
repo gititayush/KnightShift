@@ -1,5 +1,6 @@
 #include "MoveOrdering.h"
 #include "Search.h"
+#include "SEE.h"
 namespace MoveOrdering
 {
 
@@ -29,25 +30,66 @@ int ScoreMove(
     const Board& board,
     Move move,
     Move ttMove,
+    Move previousMove,
     int ply)
 {
-        if(move == ttMove)
-        return 1000000;
-        if(!MoveEncoding::IsCapture(move))
-            {
-                if(move == Search::killerMoves[0][ply])
-                    return 900000;
+if(move == ttMove && ttMove != 0)
+{
+    return 2000000;
+}
+if(!MoveEncoding::IsCapture(move))
+{
+    if(move == Search::killerMoves[0][ply])
+        return 900000;
 
-                if(move == Search::killerMoves[1][ply])
-                    return 800000;
+    if(move == Search::killerMoves[1][ply])
+        return 800000;
 
-                Piece piece =
-                    MoveEncoding::PieceMoved(move);
+   Piece piece =
+    MoveEncoding::PieceMoved(move);
 
-                Square to =
-                    MoveEncoding::To(move);
+Square to =
+    MoveEncoding::To(move);
 
-                return 700000 + Search::historyTable[piece][to];            }
+int score =
+    Search::historyTable[piece][to];
+
+if(previousMove != 0)
+{
+    Piece prevPiece =
+        MoveEncoding::PieceMoved(previousMove);
+
+    Square prevTo =
+        MoveEncoding::To(previousMove);
+
+    score +=
+        Search::continuationHistory
+        [prevPiece]
+        [prevTo]
+        [piece]
+        [to];
+}
+
+return 700000 + score;
+
+if(previousMove != 0)
+{
+    Piece prevPiece =
+        MoveEncoding::PieceMoved(previousMove);
+
+    Square prevTo =
+        MoveEncoding::To(previousMove);
+
+    score +=
+        Search::continuationHistory
+        [prevPiece]
+        [prevTo]
+        [piece]
+        [to];
+}
+
+return 700000 + score;
+}
     if(MoveEncoding::IsCapture(move))
 {
     int attacker =
@@ -62,22 +104,28 @@ int ScoreMove(
     int score =
         MVVLVA[attacker][victim];
 
+    bool goodCapture =
+        SEE::IsGoodCapture(
+            board,
+            move);
+
+   if(goodCapture)
+{
     if(PieceValue[victim] > PieceValue[attacker])
     {
-        score += 50000;      // Winning capture
-    }
-    else if(PieceValue[victim] == PieceValue[attacker])
-    {
-        score += 25000;      // Equal capture
-    }
-    else
-    {
-        score -= 25000;      // Losing capture
+        return 1300000 + score;
     }
 
-    return 100000 + score;
+    return 1200000 + score;
 }
 
+if(PieceValue[victim] >= PieceValue[attacker])
+{
+    return 600000 + score;
+}
+
+return 10000 + score;
+}
     return 0;
 }
 

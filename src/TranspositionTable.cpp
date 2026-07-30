@@ -88,12 +88,20 @@ void TT::Store(
     Entry& entry =
         table[hash % TABLE_SIZE];
 
+    // Keep deeper entries
+    if(entry.hash == hash &&
+       entry.depth > depth)
+    {
+        return;
+    }
+
     entry.hash = hash;
     entry.depth = depth;
     entry.score = score;
     entry.flag = flag;
     entry.bestMove = bestMove;
 }
+
 Move TT::GetBestMove(U64 hash)
 {
     Entry& entry =

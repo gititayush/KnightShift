@@ -1,11 +1,10 @@
 #pragma once
 
 #include "Board.h"
-#include "Move.h"
 
 namespace SEE
 {
-    int Evaluate(
+    bool IsGoodCapture(
         const Board& board,
         Move move);
 }

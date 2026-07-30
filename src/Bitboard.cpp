@@ -34,4 +34,9 @@ int CountBits(U64 board)
     return std::popcount(board);
 }
 
+int LSBIndex(U64 board)
+{
+    return std::countr_zero(board);
+}
+
 }

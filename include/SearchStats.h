@@ -25,6 +25,7 @@ namespace SearchStats
 
     extern uint64_t historyUpdates;
 
+
     void Reset();
 
     void Print();

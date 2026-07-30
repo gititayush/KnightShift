@@ -13,7 +13,7 @@ add_executable(
     src/Move.cpp
     src/FEN.cpp
     src/Search.cpp
-    src/Evaluation.cpp
+    # src/Evaluation.cpp
     src/UCI.cpp
     src/MoveList.cpp
     src/MoveGenerator.cpp
@@ -25,6 +25,8 @@ add_executable(
     src/TranspositionTable.cpp
     src/PieceSquareTables.cpp
     src/SearchStats.cpp
+    src/SEE.cpp
+    src/Evaluation2.cpp
 )
 
 target_include_directories(
