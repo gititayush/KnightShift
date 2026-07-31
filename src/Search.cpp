@@ -9,8 +9,16 @@
 #include <cstring>
 #include "SEE.h"
 #include <iostream>
+#include <chrono>
 namespace Search
 {
+
+bool stopSearch = false;
+int searchTime = 0;
+bool useTimeControl = false;
+
+std::chrono::steady_clock::time_point searchStart;
+
 Move killerMoves[2][MAX_PLY] = {};
 int historyTable[12][64] = {};
 int continuationHistory
@@ -28,7 +36,11 @@ int Quiescence(
     int alpha,
     int beta)
 {
-    int standPat = Evaluation::Evaluate(board);
+if(stopSearch)
+    return Evaluation::Evaluate(board);
+
+int standPat =
+    Evaluation::Evaluate(board);
 
     constexpr int DELTA_MARGIN = 900;
 
@@ -134,7 +146,27 @@ int Negamax(
     Move previousMove,
     bool allowNullMove)
 {
+
+    if(stopSearch)
+    return 0;
+
     SearchStats::nodes++;
+
+    if(useTimeControl &&
+   (SearchStats::nodes & 2047) == 0)
+{
+    auto elapsed =
+        std::chrono::duration_cast<
+        std::chrono::milliseconds>(
+            std::chrono::steady_clock::now()
+            - searchStart).count();
+
+    if(elapsed >= searchTime)
+    {
+        stopSearch = true;
+        return 0;
+    }
+}
 
     if(ply > 100)
 {
@@ -619,14 +651,22 @@ return alpha;
 
 Move FindBestMove(Board& board, int depth)
 {
-    std::memset(
-        historyTable,
-        0,
-        sizeof(historyTable));
-std::memset(
-    continuationHistory,
-    0,
-    sizeof(continuationHistory));
+
+        stopSearch = false;
+
+    if(useTimeControl)
+        searchStart =
+            std::chrono::steady_clock::now();
+
+    // std::memset(
+    //     historyTable,
+    //     0,
+    //     sizeof(historyTable));
+// std::memset(
+//     continuationHistory,
+//     0,
+//     sizeof(continuationHistory));
+
     // std::memset(
     // counterMoves,
     // 0,
@@ -639,6 +679,8 @@ std::memset(
         currentDepth <= depth;
         currentDepth++)
     {
+        if(stopSearch)
+            break;
         Move iterationBestMove = 0;
 
         MoveList moves;
@@ -655,6 +697,8 @@ int bestScore = -INF;
 bool firstMove = true;
         for(int i = 0; i < moves.count; i++)
         {
+                if(stopSearch)
+        break;
             // Search TT move first
             // if(ttMove != 0)
             // {

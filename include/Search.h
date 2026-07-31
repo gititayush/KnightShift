@@ -6,6 +6,11 @@
 namespace Search
 {
 
+    extern bool stopSearch;
+
+    extern int searchTime;
+    extern bool useTimeControl;
+
     constexpr int MAX_PLY = 64;
 
     extern Move killerMoves[2][MAX_PLY];

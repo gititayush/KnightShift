@@ -7,6 +7,7 @@
 #include "SearchStats.h"
 #include "TranspositionTable.h"
 #include "Zobrist.h"
+#include "UCI.h"
 
 int main()
 {
@@ -14,7 +15,8 @@ int main()
     Zobrist::Initialize();
     TT::Initialize();
 
-    RunTACTests(7);
+    UCI::Loop();
+
 
     return 0;
 }
