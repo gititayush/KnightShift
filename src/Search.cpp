@@ -381,8 +381,8 @@ if(depth <= 2 &&
 //     }
 // }
 
-int searchDepth = depth - 1;
-
+int fullDepth = depth - 1;
+int searchDepth = fullDepth;
 // // Check Extension
 // Square enemyKing =
 //     board.FindKing(board.side);
@@ -406,11 +406,11 @@ bool givesCheck =
         mover);
 
 bool reduce =
-    depth >= 3 &&
+    legalMoves > 1 &&
+    depth >= 4 &&
     !pvNode &&
-    legalMoves >= 3 &&
+    legalMoves >= 5 &&
     !MoveEncoding::IsCapture(move) &&
-    !SEE::IsGoodCapture(board, move) &&
     !givesCheck &&
     move != killerMoves[0][ply] &&
     move != killerMoves[1][ply];
@@ -420,13 +420,19 @@ if(reduce)
     SearchStats::lmrReduced++;
 
 
-    int reduction = 1;
+int reduction = 1;
 
-    if(depth >= 8)
-        reduction = 2;
+if(depth >= 10)
+    reduction++;
 
-    if(depth >= 12)
-        reduction = 3;
+if(depth >= 14)
+    reduction++;
+
+if(legalMoves >= 16)
+    reduction++;
+
+if(reduction > 3)
+    reduction = 3;
 
     searchDepth -= reduction;
 
@@ -458,14 +464,14 @@ int score;
 
                    if(reduce)
 {
-    if(score > alpha && score < beta)
+    if(score > alpha)
     {
         SearchStats::lmrResearches++;
 
         score =
             -Negamax(
                 board,
-                depth - 1,
+                fullDepth,
                 ply + 1,
                 -beta,
                 -alpha,

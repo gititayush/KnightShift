@@ -76,6 +76,12 @@ constexpr int BLOCKED_PASSER_EG = 35;
 constexpr int ROOK_OPEN_FILE_MG = 28;
 constexpr int ROOK_OPEN_FILE_EG = 18;
 
+constexpr int ROOK_BEHIND_PASSER_MG = 18;
+constexpr int ROOK_BEHIND_PASSER_EG = 32;
+
+constexpr int ROOK_IN_FRONT_PASSER_MG = 8;
+constexpr int ROOK_IN_FRONT_PASSER_EG = 14;
+
 constexpr int ROOK_SEMIOPEN_FILE_MG = 16;
 constexpr int ROOK_SEMIOPEN_FILE_EG = 10;
 
@@ -865,6 +871,37 @@ void EvaluatePawns(
     }
 }
 
+// int CountSameColorPawns(
+//     const Board& board,
+//     int side,
+//     bool darkSquares)
+// {
+//     U64 pawns =
+//         board.bitboards[
+//             side == WHITE ? WP : BP];
+
+//     int count = 0;
+
+//     while(pawns)
+//     {
+//         Square sq =
+//             (Square)Bitboard::LSBIndex(
+//                 pawns);
+
+//         Bitboard::PopBit(
+//             pawns,
+//             sq);
+
+//         bool dark =
+//             ((RankOf(sq) + FileOf(sq)) & 1);
+
+//         if(dark == darkSquares)
+//             count++;
+//     }
+
+//     return count;
+// }
+
 void EvaluatePieces(
     const Board& board,
     Score& score,
@@ -1022,6 +1059,93 @@ void EvaluatePieces(
     }
 }
 
+bool IsRookBehindPassedPawn(
+    const Board& board,
+    Square rook,
+    Side side)
+{
+    U64 pawns =
+        board.bitboards[
+            side == WHITE ? WP : BP];
+
+    int rookFile = FileOf(rook);
+    int rookRank = RankOf(rook);
+
+    while(pawns)
+    {
+        Square pawn =
+            (Square)Bitboard::LSBIndex(pawns);
+
+        Bitboard::PopBit(
+            pawns,
+            pawn);
+
+        if(!IsPassedPawn(board, pawn, side))
+            continue;
+
+        if(FileOf(pawn) != rookFile)
+            continue;
+
+        if(side == WHITE)
+        {
+            if(rookRank < RankOf(pawn))
+                return true;
+        }
+        else
+        {
+            if(rookRank > RankOf(pawn))
+                return true;
+        }
+    }
+
+    return false;
+}
+
+bool IsRookInFrontOfPassedPawn(
+    const Board& board,
+    Square rook,
+    Side side)
+{
+    U64 pawns =
+        board.bitboards[
+            side == WHITE ? WP : BP];
+
+    int rookFile = FileOf(rook);
+    int rookRank = RankOf(rook);
+
+    while(pawns)
+    {
+        Square pawn =
+            (Square)Bitboard::LSBIndex(pawns);
+
+        Bitboard::PopBit(
+            pawns,
+            pawn);
+
+        if(!IsPassedPawn(
+                board,
+                pawn,
+                side))
+            continue;
+
+        if(FileOf(pawn) != rookFile)
+            continue;
+
+        if(side == WHITE)
+        {
+            if(rookRank > RankOf(pawn))
+                return true;
+        }
+        else
+        {
+            if(rookRank < RankOf(pawn))
+                return true;
+        }
+    }
+
+    return false;
+}
+
 void EvaluateRooks(
     const Board& board,
     Score& score)
@@ -1073,6 +1197,27 @@ void EvaluateRooks(
                 ROOK_SEVENTH_MG,
                 ROOK_SEVENTH_EG);
         }
+
+        if(IsRookBehindPassedPawn(
+        board,
+        sq,
+        WHITE))
+{
+    score.Add(
+        ROOK_BEHIND_PASSER_MG,
+        ROOK_BEHIND_PASSER_EG);
+}
+
+if(IsRookInFrontOfPassedPawn(
+        board,
+        sq,
+        WHITE))
+{
+    score.Sub(
+        ROOK_IN_FRONT_PASSER_MG,
+        ROOK_IN_FRONT_PASSER_EG);
+}
+
     }
 
     // ==========================
@@ -1122,6 +1267,27 @@ void EvaluateRooks(
                 ROOK_SEVENTH_MG,
                 ROOK_SEVENTH_EG);
         }
+
+        if(IsRookBehindPassedPawn(
+        board,
+        sq,
+        BLACK))
+{
+    score.Sub(
+        ROOK_BEHIND_PASSER_MG,
+        ROOK_BEHIND_PASSER_EG);
+}
+
+if(IsRookInFrontOfPassedPawn(
+        board,
+        sq,
+        BLACK))
+{
+    score.Add(
+        ROOK_IN_FRONT_PASSER_MG,
+        ROOK_IN_FRONT_PASSER_EG);
+}
+
     }
 
     // ==========================
@@ -1309,12 +1475,15 @@ score.Add(
         BLACK,
         whiteKing);
 
-        score.Sub(
-    0,
+        int danger =
     KingAttackTable[
         std::min(
             blackAttackUnits,
-            31)]);
+            31)];
+
+        score.Sub(
+            danger,
+            danger / 3);
 
     bool own =
         HasPawnOnFile(
@@ -1395,12 +1564,15 @@ score.Sub(
                 WHITE,
                 blackKing);
 
-        score.Add(
-    0,
+int blackDanger =
     KingAttackTable[
         std::min(
             whiteAttackUnits,
-            31)]);
+            31)];
+
+score.Add(
+    blackDanger,
+    blackDanger / 3);
 
 
     own =
