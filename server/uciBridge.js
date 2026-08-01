@@ -17,10 +17,21 @@ if (!fs.existsSync(ENGINE_PATH) && fs.existsSync('/app/KnightShift')) {
 console.log(`====================================================`);
 console.log(`🛡️  KNIGHTSHIFT C++ ENGINE UCI WEB-SOCKET BRIDGE`);
 console.log(`====================================================`);
-console.log(`Target Engine Binary: ${ENGINE_PATH}`);
+import http from 'http';
 
-const wss = new WebSocketServer({ port: PORT });
-console.log(`🚀 Bridge listening on ws://localhost:${PORT}`);
+const server = http.createServer((req, res) => {
+  res.writeHead(200, { 
+    'Content-Type': 'text/plain',
+    'Access-Control-Allow-Origin': '*' 
+  });
+  res.end('KnightShift C++ Engine WebSocket Bridge is Live!');
+});
+
+const wss = new WebSocketServer({ server });
+
+server.listen(PORT, () => {
+  console.log(`🚀 Bridge listening on port ${PORT}`);
+});
 
 wss.on('connection', (ws) => {
   console.log(`[Bridge] React Frontend connected to C++ Engine!`);
