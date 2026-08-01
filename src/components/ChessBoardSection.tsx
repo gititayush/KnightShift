@@ -205,8 +205,6 @@ export const ChessBoardSection: React.FC = () => {
     : fen;
 
   const displayGame = new Chess(displayFen);
-  const officialPgn = gameRef.current.pgn();
-
   const isCheckmate = displayGame.isCheckmate();
   const isDraw = displayGame.isDraw() || displayGame.isStalemate();
   const isGameOver = isCheckmate || isDraw || !!timeOutWinner || !!resignationWinner;
@@ -619,6 +617,31 @@ export const ChessBoardSection: React.FC = () => {
       blackStep: historySteps[i + 1]
     });
   }
+
+  const officialPgn = useMemo(() => {
+    let resultStr = "*";
+    if (isCheckmate) {
+      resultStr = gameRef.current.turn() === 'w' ? "0-1" : "1-0";
+    } else if (isDraw) {
+      resultStr = "1/2-1/2";
+    } else if (timeOutWinner) {
+      resultStr = timeOutWinner.includes("White") ? "1-0" : "0-1";
+    } else if (resignationWinner) {
+      resultStr = resignationWinner.includes("White") ? "1-0" : "0-1";
+    }
+
+    const todayStr = new Date().toISOString().slice(0, 10).replace(/-/g, '.');
+    const whitePlayer = playerSide === 'w' ? "Player" : "KnightShift C++ Engine";
+    const blackPlayer = playerSide === 'b' ? "Player" : "KnightShift C++ Engine";
+
+    const pgnBody = pgnPairs.map(p => {
+      const w = p.whiteStep ? p.whiteStep.san : '';
+      const b = p.blackStep ? p.blackStep.san : '';
+      return `${p.moveNum}. ${w}${b ? ' ' + b : ''}`;
+    }).join(' ');
+
+    return `[Event "KnightShift Match"]\n[Site "https://knightshift-iota.vercel.app"]\n[Date "${todayStr}"]\n[Round "1"]\n[White "${whitePlayer}"]\n[Black "${blackPlayer}"]\n[Result "${resultStr}"]\n\n${pgnBody} ${resultStr}`;
+  }, [pgnPairs, playerSide, isCheckmate, isDraw, timeOutWinner, resignationWinner]);
 
   // Classification Color Mapping
   const getBadgeStyle = (type: string) => {
@@ -1172,27 +1195,29 @@ export const ChessBoardSection: React.FC = () => {
                   </div>
                 </div>
 
-                {/* Move Classification Summary Pills */}
-                <div className="grid grid-cols-4 gap-2 font-mono text-center text-xs">
-                  <div className="p-2 rounded-xl bg-cyan-500/20 border border-cyan-500/30 text-cyan-300">
-                    <div className="text-[10px]">Brilliant !!</div>
-                    <div className="font-bold">{reviewReport.whiteCounts.brilliant + reviewReport.blackCounts.brilliant}</div>
+                {/* Chess.com Style Side-by-Side Breakdown Table */}
+                <div className="mt-4 overflow-hidden rounded-xl border border-slate-800/80 bg-slate-950/90 font-mono text-xs">
+                  <div className="grid grid-cols-3 bg-slate-900/90 p-2.5 font-bold text-slate-300 border-b border-slate-800 text-center">
+                    <div className="text-left text-slate-400">MOVES</div>
+                    <div className="text-blue-400">YOU (WHITE)</div>
+                    <div className="text-emerald-400">KNIGHTSHIFT</div>
                   </div>
 
-                  <div className="p-2 rounded-xl bg-emerald-500/20 border border-emerald-500/30 text-emerald-300">
-                    <div className="text-[10px]">Best ✓</div>
-                    <div className="font-bold">{reviewReport.whiteCounts.best + reviewReport.blackCounts.best}</div>
-                  </div>
-
-                  <div className="p-2 rounded-xl bg-amber-500/20 border border-amber-500/30 text-amber-300">
-                    <div className="text-[10px]">Inaccuracy ?!</div>
-                    <div className="font-bold">{reviewReport.whiteCounts.inaccuracy + reviewReport.blackCounts.inaccuracy}</div>
-                  </div>
-
-                  <div className="p-2 rounded-xl bg-rose-500/20 border border-rose-500/30 text-rose-300">
-                    <div className="text-[10px]">Blunder ??</div>
-                    <div className="font-bold">{reviewReport.whiteCounts.blunder + reviewReport.blackCounts.blunder}</div>
-                  </div>
+                  {[
+                    { label: 'Brilliant !!', color: 'text-cyan-400', key: 'brilliant' },
+                    { label: 'Great Move !', color: 'text-blue-400', key: 'great' },
+                    { label: 'Best Move ✓', color: 'text-emerald-400', key: 'best' },
+                    { label: 'Inaccuracy ?!', color: 'text-amber-400', key: 'inaccuracy' },
+                    { label: 'Mistake ?', color: 'text-orange-400', key: 'mistake' },
+                    { label: 'Blunder ??', color: 'text-rose-400', key: 'blunder' },
+                    { label: 'Book Move 📖', color: 'text-purple-400', key: 'book' },
+                  ].map((row) => (
+                    <div key={row.key} className="grid grid-cols-3 p-2 border-b border-slate-900/60 items-center text-center hover:bg-slate-900/40">
+                      <div className={`text-left font-bold ${row.color}`}>{row.label}</div>
+                      <div className="font-bold text-white">{(reviewReport.whiteCounts as Record<string, number>)[row.key] || 0}</div>
+                      <div className="font-bold text-slate-300">{(reviewReport.blackCounts as Record<string, number>)[row.key] || 0}</div>
+                    </div>
+                  ))}
                 </div>
 
                 {/* Active Review Move Commentary Box */}
@@ -1217,7 +1242,7 @@ export const ChessBoardSection: React.FC = () => {
               <div className="flex items-center justify-between mb-3">
                 <div className="flex items-center gap-2 text-xs font-mono font-bold text-white dark:text-white light:text-slate-900 uppercase tracking-wider">
                   <FileText className="w-4 h-4 text-blue-400" />
-                  PGN Move History ({historySteps.length} moves)
+                  PGN Move History ({Math.ceil(historySteps.length / 2)} moves)
                 </div>
                 <div className="flex items-center gap-2">
                   <span className="text-[10px] font-mono text-slate-400 light:text-slate-600">

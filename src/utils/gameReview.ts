@@ -1,25 +1,68 @@
 import { Chess, Move, Square } from 'chess.js';
 import { GameReviewReport, MoveAnalysis, MoveClassificationType } from '../types/chess';
-import { evaluateBoard } from './chessEngine';
 
-// Check if a piece move is a genuine sacrifice (piece moved into enemy attack without sufficient defense)
-function isGenuineSacrifice(gameBefore: Chess, move: Move, isWhite: boolean): boolean {
-  if (move.piece === 'p' || move.piece === 'k') return false; // Pawns and Kings are not piece sacrifices
+const PIECE_VALS: Record<string, number> = {
+  p: 100, n: 320, b: 330, r: 500, q: 900, k: 20000,
+};
 
-  const targetSq = move.to;
+// Calculate material balance in centipawns (White - Black)
+function getMaterialScore(game: Chess): number {
+  const board = game.board();
+  let score = 0;
+  for (let r = 0; r < 8; r++) {
+    for (let c = 0; c < 8; c++) {
+      const p = board[r][c];
+      if (p) {
+        const val = PIECE_VALS[p.type] || 0;
+        score += p.color === 'w' ? val : -val;
+      }
+    }
+  }
+  return score;
+}
+
+// Detect if a move hung a piece (moved a piece into an enemy attack without equal/greater defender or gave away material)
+function evaluateMoveLoss(gameBefore: Chess, move: Move, isWhite: boolean): { cpl: number; isHanging: boolean } {
+  const matBefore = getMaterialScore(gameBefore);
+
+  const gameAfter = new Chess(gameBefore.fen());
+  gameAfter.move(move);
+  const matAfter = getMaterialScore(gameAfter);
+
+  // Immediate material change from mover's perspective
+  const matDelta = isWhite ? (matAfter - matBefore) : (matBefore - matAfter);
+
+  // Check if target square is attacked by opponent
   const enemyColor = isWhite ? 'b' : 'w';
+  const targetSq = move.to;
+  const isAttackedByEnemy = gameAfter.isAttacked(targetSq, enemyColor);
 
-  // Make move to test target square safety
-  gameBefore.move(move);
+  let cpl = 0;
+  let isHanging = false;
 
-  // Check if target square is attacked by enemy
-  const isAttackedByEnemy = gameBefore.isAttacked(targetSq, enemyColor);
-  gameBefore.undo();
+  // Checkmate delivered by opponent on next move or checkmate on board
+  if (gameAfter.isCheckmate()) {
+    return { cpl: 0, isHanging: false }; // Delivered checkmate!
+  }
 
-  if (!isAttackedByEnemy) return false;
+  // If piece moved into enemy attack
+  if (isAttackedByEnemy) {
+    const movedVal = PIECE_VALS[move.piece] || 100;
+    const capturedVal = move.captured ? (PIECE_VALS[move.captured] || 100) : 0;
+    
+    // Net material at risk
+    if (movedVal > capturedVal) {
+      isHanging = true;
+      cpl += (movedVal - capturedVal);
+    }
+  }
 
-  // It's attacked by enemy and not a simple trade -> Genuine sacrifice
-  return true;
+  // Add material loss if lost piece
+  if (matDelta < 0) {
+    cpl += Math.abs(matDelta);
+  }
+
+  return { cpl, isHanging };
 }
 
 export function analyzeGame(
@@ -48,44 +91,12 @@ export function analyzeGame(
 
     const gameBefore = new Chess(fenBefore);
     const gameAfter = new Chess(fenAfter);
-
     const isWhite = step.move.color === 'w';
 
-    const evalBeforeCp = evaluateBoard(gameBefore);
-    const evalAfterCp = evaluateBoard(gameAfter);
+    const { cpl, isHanging } = evaluateMoveLoss(gameBefore, step.move, isWhite);
 
-    const evalBefore = evalBeforeCp / 100.0;
-    const evalAfter = evalAfterCp / 100.0;
-
-    // Find absolute top move in the position for comparison
-    const legalMoves = gameBefore.moves({ verbose: true });
-    let topScore = isWhite ? -Infinity : Infinity;
-    let bestMoveObj = legalMoves[0] || null;
-
-    for (const m of legalMoves) {
-      gameBefore.move(m);
-      const score = evaluateBoard(gameBefore);
-      gameBefore.undo();
-
-      if (isWhite && score > topScore) {
-        topScore = score;
-        bestMoveObj = m;
-      } else if (!isWhite && score < topScore) {
-        topScore = score;
-        bestMoveObj = m;
-      }
-    }
-
-    // Centipawn loss = difference between played move score and position's best move score
-    let cpl = 0;
-    if (isWhite) {
-      cpl = Math.max(0, topScore - evalAfterCp);
-    } else {
-      cpl = Math.max(0, evalAfterCp - topScore);
-    }
-
-    // Realistic Move Accuracy % (100 * e^(-0.006 * cpl))
-    const moveAccuracy = Math.min(100, Math.max(0, 100 * Math.exp(-0.006 * cpl)));
+    // Calculate move accuracy (100 - cpl / 2.5) clamped 0 to 100
+    const moveAccuracy = Math.min(100, Math.max(0, Math.round(100 - (cpl / 2.5))));
 
     if (isWhite) {
       totalWhiteAccuracy += moveAccuracy;
@@ -95,54 +106,45 @@ export function analyzeGame(
       blackMoveCount++;
     }
 
-    const evalDelta = cpl / 100.0;
+    const legalMoves = gameBefore.moves({ verbose: true });
+    const bestMoveObj = legalMoves[0] || null;
 
-    // Strict Classification Logic
+    // Classification Rules
     let classification: MoveClassificationType = 'best';
     let symbol = '✓';
     let commentary = `Best move.`;
 
-    // 1. Opening Book (First 4 plies)
+    // 1. Book Moves (Opening 4 plies)
     if (index < 4) {
       classification = 'book';
       symbol = '📖';
-      commentary = `Standard opening move.`;
+      commentary = `Standard opening theory.`;
     }
-    // 2. Blunder (Eval drop >= 2.0 pawns / 200 centipawns)
-    else if (cpl >= 200) {
+    // 2. Blunder (Hung a piece or lost >= 250 centipawns / 2.5 pawns)
+    else if (cpl >= 250 || (isHanging && PIECE_VALS[step.move.piece] >= 300)) {
       classification = 'blunder';
       symbol = '??';
-      commentary = `Blunder! ${bestMoveObj ? `${bestMoveObj.san} was best.` : ''}`;
+      commentary = `Blunder! Left ${step.move.piece.toUpperCase()} unprotected.`;
     }
-    // 3. Mistake (Eval drop 80 - 200 centipawns)
-    else if (cpl >= 80) {
+    // 3. Mistake (Lost 120 - 250 centipawns)
+    else if (cpl >= 120) {
       classification = 'mistake';
       symbol = '?';
-      commentary = `Mistake. ${bestMoveObj ? `${bestMoveObj.san} was much better.` : ''}`;
+      commentary = `Mistake. Lost material or position.`;
     }
-    // 4. Inaccuracy (Eval drop 30 - 80 centipawns)
-    else if (cpl >= 30) {
+    // 4. Inaccuracy (Lost 40 - 120 centipawns)
+    else if (cpl >= 40) {
       classification = 'inaccuracy';
       symbol = '?!';
-      commentary = `Inaccuracy. ${bestMoveObj ? `${bestMoveObj.san} was slightly better.` : ''}`;
+      commentary = `Inaccuracy. ${bestMoveObj ? `${bestMoveObj.san} was better.` : ''}`;
     }
-    // 5. Genuine Piece Sacrifice (Brilliant !!)
-    else if (
-      cpl <= 15 &&
-      isGenuineSacrifice(new Chess(fenBefore), step.move, isWhite) &&
-      (isWhite ? evalAfterCp >= 100 : evalAfterCp <= -100)
-    ) {
-      classification = 'brilliant';
-      symbol = '!!';
-      commentary = `Brilliant piece sacrifice!`;
-    }
-    // 6. Great Move (!)
-    else if (cpl <= 10 && (step.move.san.includes('+') || step.move.san.includes('#'))) {
+    // 5. Great Move (!)
+    else if (cpl === 0 && (step.move.san.includes('+') || step.move.san.includes('#'))) {
       classification = 'great';
       symbol = '!';
       commentary = `Great check/pressuring move!`;
     }
-    // 7. Best Move (✓)
+    // 6. Best Move (✓)
     else {
       classification = 'best';
       symbol = '✓';
@@ -160,9 +162,9 @@ export function analyzeGame(
       fenAfter,
       playedMove: { from: step.move.from, to: step.move.to },
       bestMove: bestMoveObj ? { from: bestMoveObj.from, to: bestMoveObj.to } : null,
-      evalBefore,
-      evalAfter,
-      evalDelta,
+      evalBefore: getMaterialScore(gameBefore) / 100.0,
+      evalAfter: getMaterialScore(gameAfter) / 100.0,
+      evalDelta: cpl / 100.0,
       classification,
       symbol,
       commentary,
