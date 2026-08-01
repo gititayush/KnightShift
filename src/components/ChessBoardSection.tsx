@@ -227,7 +227,7 @@ export const ChessBoardSection: React.FC = () => {
     }
   }, [isGameOver, isCheckmate, timeOutWinner, resignationWinner, dismissedModal, displayGame, playerSide, historySteps, reviewReport]);
 
-  // Instant Real-Time Evaluation Score calculation
+  // Instant Real-Time Evaluation Score calculation (Stable from White perspective)
   const currentEval = useMemo(() => {
     const activeGame = new Chess(displayFen);
     
@@ -238,12 +238,9 @@ export const ChessBoardSection: React.FC = () => {
       return 0.0;
     }
 
-    if (isViewingLive && stats.score !== undefined && stats.score !== 0) {
-      return stats.score;
-    }
-
-    return parseFloat((evaluateBoard(activeGame) / 100.0).toFixed(2));
-  }, [displayFen, isViewingLive, stats.score, fen]);
+    const rawCp = evaluateBoard(activeGame);
+    return parseFloat((rawCp / 100.0).toFixed(2));
+  }, [displayFen]);
 
   // Current Move Review Analysis
   const activeMoveAnalysis = useMemo(() => {
