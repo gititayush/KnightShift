@@ -201,9 +201,14 @@ export async function calculateEngineMove(
 
     let bestMoveObj: Move | null = null;
     if (moveStr) {
+      const cleanStr = moveStr.trim().toLowerCase();
       try {
         const moves = game.moves({ verbose: true });
-        bestMoveObj = moves.find(m => `${m.from}${m.to}` === moveStr || m.san === moveStr) || null;
+        bestMoveObj = moves.find(m => 
+          `${m.from}${m.to}` === cleanStr || 
+          `${m.from}${m.to}${m.promotion || ''}` === cleanStr || 
+          m.san.toLowerCase() === cleanStr
+        ) || moves[0] || null;
       } catch (e) {}
     }
 
