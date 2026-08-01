@@ -130,12 +130,12 @@ export const Hero: React.FC = () => {
           className="mt-16 pt-8 border-t border-slate-800/60 grid grid-cols-2 md:grid-cols-4 gap-4 max-w-4xl mx-auto"
         >
           <div className="p-4 rounded-xl glass-panel">
-            <div className="text-xs text-slate-400 font-mono mb-1">CHESS SPEED</div>
-            <div className="text-2xl font-bold font-mono text-blue-400">14.8M NPS</div>
+            <div className="text-xs text-slate-400 font-mono mb-1">SEARCH SPEED</div>
+            <div className="text-2xl font-bold font-mono text-blue-400">650K NPS</div>
           </div>
           <div className="p-4 rounded-xl glass-panel">
             <div className="text-xs text-slate-400 font-mono mb-1">ESTIMATED ELO</div>
-            <div className="text-2xl font-bold font-mono text-cyan-400">2650 Elo</div>
+            <div className="text-2xl font-bold font-mono text-cyan-400">~1950 Elo</div>
           </div>
           <div className="p-4 rounded-xl glass-panel">
             <div className="text-xs text-slate-400 font-mono mb-1">BOARD REPR.</div>

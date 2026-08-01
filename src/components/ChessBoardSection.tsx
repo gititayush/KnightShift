@@ -152,8 +152,8 @@ export const ChessBoardSection: React.FC = () => {
   const [stats, setStats] = useState<EngineStats>({
     depth: 5,
     selDepth: 8,
-    nodes: 124890,
-    nps: 1850000,
+    nodes: 42890,
+    nps: 650000,
     timeMs: 68,
     score: 0.0,
     isMate: false,
@@ -1388,7 +1388,7 @@ export const ChessBoardSection: React.FC = () => {
                 <div className="p-3.5 rounded-xl bg-slate-900/80 light:bg-slate-100 border border-slate-800 light:border-slate-300">
                   <div className="text-[10px] font-mono text-slate-400 light:text-slate-600 mb-0.5">SPEED (NPS)</div>
                   <div className="text-xl font-bold font-mono text-cyan-400 light:text-cyan-800">
-                    {(stats.nps / 1000000).toFixed(2)} M/s
+                    {stats.nps >= 1000000 ? `${(stats.nps / 1000000).toFixed(2)} M/s` : `${Math.round(stats.nps / 1000)} K/s`}
                   </div>
                 </div>
 

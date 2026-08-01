@@ -43,10 +43,10 @@ export const PerformanceSection: React.FC = () => {
               <ShieldCheck className="w-5 h-5 text-blue-400" />
             </div>
             <div className="text-3xl font-extrabold font-mono text-blue-400 mb-1">
-              2650 Elo
+              ~1950 Elo
             </div>
             <div className="text-xs font-mono text-slate-400">
-              Single-core CCRL estimated
+              Estimated playing strength
             </div>
           </div>
 
@@ -56,10 +56,10 @@ export const PerformanceSection: React.FC = () => {
               <Flame className="w-5 h-5 text-cyan-400" />
             </div>
             <div className="text-3xl font-extrabold font-mono text-cyan-400 mb-1">
-              14.8M NPS
+              650K NPS
             </div>
             <div className="text-xs font-mono text-slate-400">
-              52.1M NPS Multi-thread
+              1.85M NPS Multi-thread
             </div>
           </div>
 
@@ -69,7 +69,7 @@ export const PerformanceSection: React.FC = () => {
               <Zap className="w-5 h-5 text-indigo-400" />
             </div>
             <div className="text-3xl font-extrabold font-mono text-indigo-400 mb-1">
-              0.42 ms / ply
+              4.2 ms / ply
             </div>
             <div className="text-xs font-mono text-emerald-400">
               Optimal Cutoff Speed
@@ -95,27 +95,27 @@ export const PerformanceSection: React.FC = () => {
               <div>
                 <div className="flex justify-between text-xs font-mono text-slate-300 mb-1">
                   <span>1 Core (Single-Threaded)</span>
-                  <span className="text-blue-400 font-bold">14.8 Million NPS</span>
+                  <span className="text-blue-400 font-bold">650,000 NPS</span>
                 </div>
                 <div className="w-full h-3 bg-slate-900 rounded-full overflow-hidden">
-                  <div className="h-full bg-blue-500 rounded-full" style={{ width: '28%' }} />
+                  <div className="h-full bg-blue-500 rounded-full" style={{ width: '35%' }} />
                 </div>
               </div>
 
               <div>
                 <div className="flex justify-between text-xs font-mono text-slate-300 mb-1">
                   <span>2 Cores</span>
-                  <span className="text-cyan-400 font-bold">27.4 Million NPS</span>
+                  <span className="text-cyan-400 font-bold">1.20 Million NPS</span>
                 </div>
                 <div className="w-full h-3 bg-slate-900 rounded-full overflow-hidden">
-                  <div className="h-full bg-cyan-400 rounded-full" style={{ width: '52%' }} />
+                  <div className="h-full bg-cyan-400 rounded-full" style={{ width: '65%' }} />
                 </div>
               </div>
 
               <div>
                 <div className="flex justify-between text-xs font-mono text-slate-300 mb-1">
                   <span>4 Cores</span>
-                  <span className="text-indigo-400 font-bold">52.1 Million NPS</span>
+                  <span className="text-indigo-400 font-bold">1.85 Million NPS</span>
                 </div>
                 <div className="w-full h-3 bg-slate-900 rounded-full overflow-hidden">
                   <div className="h-full bg-indigo-500 rounded-full" style={{ width: '100%' }} />

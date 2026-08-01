@@ -3,17 +3,17 @@ import { motion } from 'framer-motion';
 import { Activity, Cpu, Database, RefreshCw, Zap, Sliders, ShieldCheck, Flame } from 'lucide-react';
 
 export const DashboardStats: React.FC = () => {
-  const [depth, setDepth] = useState<number>(18);
-  const [nodes, setNodes] = useState<number>(14258900);
-  const [nps, setNps] = useState<number>(14820000);
-  const [hashMb, setHashMb] = useState<number>(256);
-  const [ttHitRate, setTtHitRate] = useState<number>(64.8);
-  const [betaCutoffs, setBetaCutoffs] = useState<number>(82.4);
+  const [depth, setDepth] = useState<number>(8);
+  const [nodes, setNodes] = useState<number>(425890);
+  const [nps, setNps] = useState<number>(650000);
+  const [hashMb, setHashMb] = useState<number>(64);
+  const [ttHitRate, setTtHitRate] = useState<number>(58.4);
+  const [betaCutoffs, setBetaCutoffs] = useState<number>(76.2);
   const [pvsResearches, setPvsResearches] = useState<number>(4.2);
-  const [lmrReductions, setLmrReductions] = useState<number>(34.6);
-  const [historyUpdates, setHistoryUpdates] = useState<number>(2450800);
-  const [killerUpdates, setKillerUpdates] = useState<number>(982400);
-  const [evaluation, setEvaluation] = useState<number>(+1.45);
+  const [lmrReductions, setLmrReductions] = useState<number>(28.6);
+  const [historyUpdates, setHistoryUpdates] = useState<number>(24500);
+  const [killerUpdates, setKillerUpdates] = useState<number>(9820);
+  const [evaluation, setEvaluation] = useState<number>(+0.35);
 
   return (
     <section id="dashboard" className="py-24 relative bg-[#08080a]">
@@ -71,7 +71,7 @@ export const DashboardStats: React.FC = () => {
               <Flame className="w-4 h-4 text-amber-400" />
             </div>
             <div className="text-3xl font-extrabold font-mono text-amber-400 mb-1">
-              {(nps / 1000000).toFixed(2)} M/s
+              {(nps / 1000).toFixed(0)} K/s
             </div>
             <div className="text-[11px] font-mono text-emerald-400">
               Single Thread Peak
