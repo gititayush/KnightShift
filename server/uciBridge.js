@@ -91,9 +91,9 @@ wss.on('connection', (ws) => {
         const binc = msg.binc ? Math.round(msg.binc * 1000) : 3000;
 
         console.log(`[Sending to C++] position fen ${fenStr}`);
-        console.log(`[Sending to C++] go depth ${depth} movetime 1200 wtime ${wtime} btime ${btime} winc ${winc} binc ${binc}`);
+        console.log(`[Sending to C++] go depth ${depth} wtime ${wtime} btime ${btime} winc ${winc} binc ${binc}`);
         engineProcess.stdin.write(`position fen ${fenStr}\n`);
-        engineProcess.stdin.write(`go depth ${depth} movetime 1200 wtime ${wtime} btime ${btime} winc ${winc} binc ${binc}\n`);
+        engineProcess.stdin.write(`go depth ${depth} wtime ${wtime} btime ${btime} winc ${winc} binc ${binc}\n`);
       } 
       else if (msg.type === 'stop') {
         engineProcess.stdin.write('stop\n');

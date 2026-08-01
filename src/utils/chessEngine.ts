@@ -83,9 +83,13 @@ class CppEngineClient {
     }
 
     try {
-      const wsUrl = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
-        ? 'ws://localhost:8080'
-        : 'wss://knightshift.onrender.com';
+      const isLocal = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
+      const wsUrl = isLocal ? 'ws://localhost:8080' : 'wss://knightshift.onrender.com';
+
+      // Wake up Render free instance via HTTP ping if on live site
+      if (!isLocal) {
+        fetch('https://knightshift.onrender.com', { mode: 'no-cors' }).catch(() => {});
+      }
 
       this.ws = new WebSocket(wsUrl);
 
@@ -103,6 +107,7 @@ class CppEngineClient {
           } else if (data.type === 'bestmove') {
             if (this.onBestMoveCallback) {
               this.onBestMoveCallback(data.bestMove);
+              this.onBestMoveCallback = null;
             }
           }
         } catch (e) {
@@ -116,7 +121,7 @@ class CppEngineClient {
 
       this.ws.onclose = () => {
         this.isConnected = false;
-        setTimeout(() => this.connect(), 3000);
+        setTimeout(() => this.connect(), 2000);
       };
     } catch (e) {
       this.isConnected = false;
@@ -143,7 +148,18 @@ class CppEngineClient {
       }
 
       this.onTelemetryCallback = onTelemetry || null;
+      
+      // Safety timeout: resolve if no move received within 15 seconds to prevent frozen UI
+      const timeout = setTimeout(() => {
+        if (this.onBestMoveCallback) {
+          console.warn('[Engine Timeout] No bestmove received in 15s, resolving search.');
+          this.onBestMoveCallback = null;
+          resolve('');
+        }
+      }, 15000);
+
       this.onBestMoveCallback = (bestMoveStr: string) => {
+        clearTimeout(timeout);
         resolve(bestMoveStr);
       };
 
