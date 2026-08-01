@@ -2,21 +2,24 @@ import { Chess, Move, Square } from 'chess.js';
 import { GameReviewReport, MoveAnalysis, MoveClassificationType } from '../types/chess';
 import { evaluateBoard } from './chessEngine';
 
-// Chess.com Win Chance Formula (Sigmoidal conversion from centipawns)
-function getWinChance(evalCp: number): number {
-  return 2 / (1 + Math.exp(-0.00368 * evalCp)) - 1;
-}
+// Check if a piece move is a genuine sacrifice (piece moved into enemy attack without sufficient defense)
+function isGenuineSacrifice(gameBefore: Chess, move: Move, isWhite: boolean): boolean {
+  if (move.piece === 'p' || move.piece === 'k') return false; // Pawns and Kings are not piece sacrifices
 
-// Chess.com CAPS Move Accuracy Formula
-function calculateMoveAccuracy(evalBeforeCp: number, evalAfterCp: number, isWhite: boolean): number {
-  const winBefore = getWinChance(isWhite ? evalBeforeCp : -evalBeforeCp);
-  const winAfter = getWinChance(isWhite ? evalAfterCp : -evalAfterCp);
-  const winLoss = Math.max(0, winBefore - winAfter);
-  
-  // CAPS formula: 103.1668 * e^(-0.04354 * winLoss * 100) - 3.1668
-  const winLossPct = winLoss * 100;
-  const rawAcc = 103.1668 * Math.exp(-0.04354 * winLossPct) - 3.1668;
-  return Math.min(100, Math.max(0, rawAcc));
+  const targetSq = move.to;
+  const enemyColor = isWhite ? 'b' : 'w';
+
+  // Make move to test target square safety
+  gameBefore.move(move);
+
+  // Check if target square is attacked by enemy
+  const isAttackedByEnemy = gameBefore.isAttacked(targetSq, enemyColor);
+  gameBefore.undo();
+
+  if (!isAttackedByEnemy) return false;
+
+  // It's attacked by enemy and not a simple trade -> Genuine sacrifice
+  return true;
 }
 
 export function analyzeGame(
@@ -54,29 +57,10 @@ export function analyzeGame(
     const evalBefore = evalBeforeCp / 100.0;
     const evalAfter = evalAfterCp / 100.0;
 
-    // Centipawn loss from mover's perspective
-    let cpl = 0;
-    if (isWhite) {
-      cpl = Math.max(0, evalBeforeCp - evalAfterCp);
-    } else {
-      cpl = Math.max(0, evalAfterCp - evalBeforeCp);
-    }
-    const evalDelta = cpl / 100.0;
-
-    // Calculate move accuracy using CAPS formula
-    const moveAccuracy = calculateMoveAccuracy(evalBeforeCp, evalAfterCp, isWhite);
-    if (isWhite) {
-      totalWhiteAccuracy += moveAccuracy;
-      whiteMoveCount++;
-    } else {
-      totalBlackAccuracy += moveAccuracy;
-      blackMoveCount++;
-    }
-
-    // Determine Best Move Arrow
+    // Find absolute top move in the position for comparison
     const legalMoves = gameBefore.moves({ verbose: true });
-    let bestMoveObj = legalMoves[0] || null;
     let topScore = isWhite ? -Infinity : Infinity;
+    let bestMoveObj = legalMoves[0] || null;
 
     for (const m of legalMoves) {
       gameBefore.move(m);
@@ -92,7 +76,28 @@ export function analyzeGame(
       }
     }
 
-    // Strict Chess.com Classification Rules
+    // Centipawn loss = difference between played move score and position's best move score
+    let cpl = 0;
+    if (isWhite) {
+      cpl = Math.max(0, topScore - evalAfterCp);
+    } else {
+      cpl = Math.max(0, evalAfterCp - topScore);
+    }
+
+    // Realistic Move Accuracy % (100 * e^(-0.006 * cpl))
+    const moveAccuracy = Math.min(100, Math.max(0, 100 * Math.exp(-0.006 * cpl)));
+
+    if (isWhite) {
+      totalWhiteAccuracy += moveAccuracy;
+      whiteMoveCount++;
+    } else {
+      totalBlackAccuracy += moveAccuracy;
+      blackMoveCount++;
+    }
+
+    const evalDelta = cpl / 100.0;
+
+    // Strict Classification Logic
     let classification: MoveClassificationType = 'best';
     let symbol = '✓';
     let commentary = `Best move.`;
@@ -101,43 +106,41 @@ export function analyzeGame(
     if (index < 4) {
       classification = 'book';
       symbol = '📖';
-      commentary = `Standard opening theory.`;
+      commentary = `Standard opening move.`;
     }
-    // 2. Blunder (Eval drop > 1.8 pawns)
-    else if (evalDelta > 1.8) {
+    // 2. Blunder (Eval drop >= 2.0 pawns / 200 centipawns)
+    else if (cpl >= 200) {
       classification = 'blunder';
       symbol = '??';
       commentary = `Blunder! ${bestMoveObj ? `${bestMoveObj.san} was best.` : ''}`;
     }
-    // 3. Mistake (Eval drop 0.8 - 1.8 pawns)
-    else if (evalDelta > 0.8) {
+    // 3. Mistake (Eval drop 80 - 200 centipawns)
+    else if (cpl >= 80) {
       classification = 'mistake';
       symbol = '?';
-      commentary = `Mistake. ${bestMoveObj ? `${bestMoveObj.san} was much stronger.` : ''}`;
+      commentary = `Mistake. ${bestMoveObj ? `${bestMoveObj.san} was much better.` : ''}`;
     }
-    // 4. Inaccuracy (Eval drop 0.3 - 0.8 pawns)
-    else if (evalDelta > 0.3) {
+    // 4. Inaccuracy (Eval drop 30 - 80 centipawns)
+    else if (cpl >= 30) {
       classification = 'inaccuracy';
       symbol = '?!';
       commentary = `Inaccuracy. ${bestMoveObj ? `${bestMoveObj.san} was slightly better.` : ''}`;
     }
-    // 5. Check for Genuine Sacrifice (Brilliant !!)
-    // Must leave a piece hanging (Queen/Rook/Bishop/Knight) AND maintain winning position (cpl == 0)
+    // 5. Genuine Piece Sacrifice (Brilliant !!)
     else if (
-      cpl <= 10 &&
-      step.move.piece !== 'p' &&
-      !step.move.captured &&
-      (isWhite ? evalAfterCp >= 150 : evalAfterCp <= -150)
+      cpl <= 15 &&
+      isGenuineSacrifice(new Chess(fenBefore), step.move, isWhite) &&
+      (isWhite ? evalAfterCp >= 100 : evalAfterCp <= -100)
     ) {
       classification = 'brilliant';
       symbol = '!!';
       commentary = `Brilliant piece sacrifice!`;
     }
     // 6. Great Move (!)
-    else if (cpl <= 5 && (step.move.san.includes('+') || step.move.san.includes('#'))) {
+    else if (cpl <= 10 && (step.move.san.includes('+') || step.move.san.includes('#'))) {
       classification = 'great';
       symbol = '!';
-      commentary = `Great move, maintaining strong pressure.`;
+      commentary = `Great check/pressuring move!`;
     }
     // 7. Best Move (✓)
     else {
