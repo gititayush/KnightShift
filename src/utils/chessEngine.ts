@@ -83,7 +83,11 @@ class CppEngineClient {
     }
 
     try {
-      this.ws = new WebSocket('ws://localhost:8080');
+      const wsUrl = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
+        ? 'ws://localhost:8080'
+        : 'wss://knightshift.onrender.com';
+
+      this.ws = new WebSocket(wsUrl);
 
       this.ws.onopen = () => {
         console.log('✅ Connected to KnightShift C++ Engine WebSocket Bridge');
