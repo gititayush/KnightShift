@@ -18,6 +18,8 @@ uint64_t lmrReduced = 0;
 
 uint64_t lmrResearches = 0;
 
+uint64_t iidSearches = 0;
+
 uint64_t aspirationFailHigh = 0;
 
 uint64_t aspirationFailLow = 0;
@@ -41,6 +43,8 @@ void Reset()
 
     lmrResearches = 0;
 
+    iidSearches = 0;
+
     aspirationFailHigh = 0;
 
     aspirationFailLow = 0;
@@ -61,22 +65,22 @@ void Print()
     std::cout << "TT Hits             : " << ttHits << '\n';
 
     if(ttProbes)
-{
-    std::cout
-        << "TT Hit Rate         : "
-        << (100.0 * ttHits / ttProbes)
-        << "%\n";
-}
+    {
+        std::cout
+            << "TT Hit Rate         : "
+            << (100.0 * ttHits / ttProbes)
+            << "%\n";
+    }
 
     std::cout << "Beta Cutoffs        : " << betaCutoffs << '\n';
 
     if(nodes)
-{
-    std::cout
-        << "Cutoff Rate         : "
-        << (100.0 * betaCutoffs / nodes)
-        << "%\n";
-}
+    {
+        std::cout
+            << "Cutoff Rate         : "
+            << (100.0 * betaCutoffs / nodes)
+            << "%\n";
+    }
 
     std::cout << "PVS Re-searches     : " << pvsResearches << '\n';
 
@@ -85,12 +89,14 @@ void Print()
     std::cout << "LMR Re-searches     : " << lmrResearches << '\n';
 
     if(lmrReduced)
-{
-    std::cout
-        << "LMR Re-search Rate  : "
-        << (100.0 * lmrResearches / lmrReduced)
-        << "%\n";
-}
+    {
+        std::cout
+            << "LMR Re-search Rate  : "
+            << (100.0 * lmrResearches / lmrReduced)
+            << "%\n";
+    }
+
+    std::cout << "IID Searches        : " << iidSearches << '\n';
 
     std::cout << "Aspiration High     : " << aspirationFailHigh << '\n';
 

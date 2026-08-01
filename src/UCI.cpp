@@ -144,9 +144,17 @@ void Loop()
 
             else if(token == "go")
 {
-    int depth = 6;
+    int depth = 64;
 
     Search::useTimeControl = false;
+    Search::searchTime = 0;
+
+    int wtime = -1;
+    int btime = -1;
+    int winc = 0;
+    int binc = 0;
+    int movetime = -1;
+    int movestogo = 30;
 
     std::string word;
 
@@ -156,35 +164,61 @@ void Loop()
         {
             ss >> depth;
         }
-
         else if(word == "movetime")
         {
-            ss >> Search::searchTime;
-            Search::useTimeControl = true;
+            ss >> movetime;
         }
-
         else if(word == "wtime")
         {
-            int time;
-            ss >> time;
-
-            if(board.side == WHITE)
-            {
-                Search::searchTime = time / 30;
-                Search::useTimeControl = true;
-            }
+            ss >> wtime;
         }
-
         else if(word == "btime")
         {
-            int time;
-            ss >> time;
+            ss >> btime;
+        }
+        else if(word == "winc")
+        {
+            ss >> winc;
+        }
+        else if(word == "binc")
+        {
+            ss >> binc;
+        }
+        else if(word == "movestogo")
+        {
+            ss >> movestogo;
 
-            if(board.side == BLACK)
-            {
-                Search::searchTime = time / 30;
-                Search::useTimeControl = true;
-            }
+            if(movestogo <= 0)
+                movestogo = 30;
+        }
+    }
+
+    if(movetime != -1)
+    {
+        Search::searchTime = movetime;
+        Search::useTimeControl = true;
+    }
+    else
+    {
+        int remaining =
+            (board.side == WHITE) ? wtime : btime;
+
+        int increment =
+            (board.side == WHITE) ? winc : binc;
+
+        if(remaining > 0)
+        {
+            Search::searchTime =
+                remaining / movestogo
+                + increment / 2;
+
+            if(Search::searchTime < 20)
+                Search::searchTime = 20;
+
+            if(Search::searchTime > remaining / 2)
+                Search::searchTime = remaining / 2;
+
+            Search::useTimeControl = true;
         }
     }
 
@@ -200,7 +234,6 @@ void Loop()
         << MoveEncoding::ToString(bestMove)
         << std::endl;
 }
-
         else if(token == "quit")
         {
             break;

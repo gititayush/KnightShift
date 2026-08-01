@@ -205,7 +205,17 @@ if(depth <= 0)
         alpha,
         beta);
 
-    int staticEval =
+if(TT::Probe(
+        board.hashKey,
+        depth,
+        alpha,
+        beta,
+        ttScore))
+{
+    return ttScore;
+}
+
+int staticEval =
     Evaluation::Evaluate(board);
 
 // =========================
@@ -224,16 +234,32 @@ if(depth <= 3 &&
     }
 }
 
+    Move ttMove =
+    TT::GetBestMove(board.hashKey);
 
-if(TT::Probe(
-        board.hashKey,
-        depth,
-        alpha,
-        beta,
-        ttScore))
+bool useIID =
+    depth >= 6 &&
+    pvNode &&
+    ttMove == 0 &&
+    allowNullMove;
+
+if(useIID)
 {
-    return ttScore;
+    SearchStats::iidSearches++;
+
+    Negamax(
+        board,
+        depth - 3,
+        ply,
+        -INF,
+        INF,
+        previousMove,
+        allowNullMove);
+
+    ttMove =
+        TT::GetBestMove(board.hashKey);
 }
+
 
 // =========================
 // Mate Distance Pruning
@@ -295,8 +321,7 @@ int score =
     MoveList moves;
     MoveGenerator::Generate(board, moves);
 
-    Move ttMove =
-    TT::GetBestMove(board.hashKey);
+
 
     Move bestMove = 0;
 
@@ -657,28 +682,14 @@ return alpha;
 
 Move FindBestMove(Board& board, int depth)
 {
-
-        stopSearch = false;
+    stopSearch = false;
 
     if(useTimeControl)
         searchStart =
             std::chrono::steady_clock::now();
 
-    // std::memset(
-    //     historyTable,
-    //     0,
-    //     sizeof(historyTable));
-// std::memset(
-//     continuationHistory,
-//     0,
-//     sizeof(continuationHistory));
+    SearchStats::Reset();
 
-    // std::memset(
-    // counterMoves,
-    // 0,
-    // sizeof(counterMoves));
-
-        SearchStats::Reset();
     Move bestMove = 0;
 
     for(int currentDepth = 1;
@@ -687,6 +698,7 @@ Move FindBestMove(Board& board, int depth)
     {
         if(stopSearch)
             break;
+
         Move iterationBestMove = 0;
 
         MoveList moves;
@@ -695,33 +707,13 @@ Move FindBestMove(Board& board, int depth)
         Move ttMove =
             TT::GetBestMove(board.hashKey);
 
+        int bestScore = -INF;
+        bool firstMove = true;
 
-// int alpha = -INF;
-// int beta = INF;
-
-int bestScore = -INF;
-bool firstMove = true;
         for(int i = 0; i < moves.count; i++)
         {
-                if(stopSearch)
-        break;
-            // Search TT move first
-            // if(ttMove != 0)
-            // {
-            //     for(int j = i; j < moves.count; j++)
-            //     {
-            //         if(moves.moves[j] == ttMove)
-            //         {
-            //             std::swap(
-            //                 moves.moves[i],
-            //                 moves.moves[j]);
-
-            //             break;
-            //         }
-            //     }
-
-            //     ttMove = 0;
-            // }
+            if(stopSearch)
+                break;
 
             int bestIndex = i;
             int bestMoveScore = -1;
@@ -732,7 +724,9 @@ bool firstMove = true;
                     MoveOrdering::ScoreMove(
                         board,
                         moves.moves[j],
-                        ttMove,0,0);
+                        ttMove,
+                        0,
+                        0);
 
                 if(score > bestMoveScore)
                 {
@@ -769,64 +763,60 @@ bool firstMove = true;
                 continue;
             }
 
-int score;
+            int score;
 
-if(firstMove)
-{
-    score =
-        -Negamax(
-            board,
-            currentDepth - 1,
-            1,
-            -INF,
-            INF,move);
+            if(firstMove)
+            {
+                score =
+                    -Negamax(
+                        board,
+                        currentDepth - 1,
+                        1,
+                        -INF,
+                        INF,
+                        move);
 
-    firstMove = false;
-}
-else
-{
-    score =
-        -Negamax(
-            board,
-            currentDepth - 1,
-            1,
-            -bestScore - 1,
-            -bestScore,move);
-
-if(score > bestScore)
-{
-    score =
-        -Negamax(
-            board,
-            currentDepth - 1,
-            1,
-            -INF,
-            INF,move);
-}
-}
-            board.UndoMove(move, undo);
+                firstMove = false;
+            }
+            else
+            {
+                score =
+                    -Negamax(
+                        board,
+                        currentDepth - 1,
+                        1,
+                        -bestScore - 1,
+                        -bestScore,
+                        move);
 
                 if(score > bestScore)
                 {
-                    bestScore = score;
-
-                    // alpha = score;
-
-                    iterationBestMove = move;
+                    score =
+                        -Negamax(
+                            board,
+                            currentDepth - 1,
+                            1,
+                            -INF,
+                            INF,
+                            move);
                 }
+            }
+
+            board.UndoMove(move, undo);
+
+            if(score > bestScore)
+            {
+                bestScore = score;
+                iterationBestMove = move;
+            }
         }
 
         if(iterationBestMove != 0)
         {
             bestMove = iterationBestMove;
         }
-
-//         constexpr int ASPIRATION = 40;
-
-// alpha = bestScore - ASPIRATION;
-// beta  = bestScore + ASPIRATION;
     }
-// SearchStats::Print();
+
     return bestMove;
 }
 }

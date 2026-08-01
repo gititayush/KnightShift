@@ -337,6 +337,27 @@ if(MoveEncoding::IsDoublePush(move))
         WHITE;
 hashKey = Zobrist::GenerateHash(*this);
     return true;
+
+#ifndef NDEBUG
+
+for(int sq = A1; sq <= H8; sq++)
+{
+    Piece p = pieceOnSquare[sq];
+
+    if(p == NO_PIECE)
+        continue;
+
+    if((bitboards[p] & (1ULL << sq)) == 0)
+    {
+        std::cout
+            << "BITBOARD MISMATCH AFTER MAKEMOVE\n";
+
+        std::abort();
+    }
+}
+
+#endif
+
 }
 
 void Board::UndoMove(Move move, const UndoInfo& undo)
@@ -459,6 +480,27 @@ Square Board::FindKing(Side side) const
         return NO_SQUARE;
 
     return (Square)__builtin_ctzll(kings);
+
+#ifndef NDEBUG
+
+for(int sq = A1; sq <= H8; sq++)
+{
+    Piece p = pieceOnSquare[sq];
+
+    if(p == NO_PIECE)
+        continue;
+
+    if((bitboards[p] & (1ULL << sq)) == 0)
+    {
+        std::cout
+            << "BITBOARD MISMATCH AFTER MAKEMOVE\n";
+
+        std::abort();
+    }
+}
+
+#endif
+
 }
 
 

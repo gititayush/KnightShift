@@ -17,6 +17,9 @@ namespace SearchStats
 
     extern uint64_t lmrResearches;
 
+    extern uint64_t iidSearches;
+
+
     extern uint64_t aspirationFailHigh;
 
     extern uint64_t aspirationFailLow;
