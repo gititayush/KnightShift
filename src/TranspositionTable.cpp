@@ -2,6 +2,7 @@
 #include "SearchStats.h"
 
 constexpr int TABLE_SIZE = 1 << 20;
+constexpr int TABLE_MASK = TABLE_SIZE - 1;
 
 TT::Entry table[TABLE_SIZE];
 
@@ -15,9 +16,9 @@ void TT::Initialize()
 
 void TT::Clear()
 {
-
     probes = 0;
-hits = 0;
+    hits = 0;
+
     for(int i = 0; i < TABLE_SIZE; i++)
     {
         table[i].hash = 0;
@@ -37,8 +38,9 @@ bool TT::Probe(
 {
     SearchStats::ttProbes++;
     probes++;
+
     Entry& entry =
-        table[hash % TABLE_SIZE];
+        table[hash & TABLE_MASK];
 
     if(entry.hash != hash)
         return false;
@@ -47,33 +49,51 @@ bool TT::Probe(
         return false;
 
     switch(entry.flag)
-{
+    {
     case EXACT:
-        SearchStats::ttHits++;
         score = entry.score;
-            hits++;
+
+        if(score > 29000)
+            score -= depth;
+        else if(score < -29000)
+            score += depth;
+
+        SearchStats::ttHits++;
+        hits++;
         return true;
 
     case ALPHA:
-        if(entry.score <= alpha)
+        score = entry.score;
+
+        if(score > 29000)
+            score -= depth;
+        else if(score < -29000)
+            score += depth;
+
+        if(score <= alpha)
         {
             SearchStats::ttHits++;
-            score = entry.score;
-                hits++;
+            hits++;
             return true;
         }
         break;
 
     case BETA:
-        if(entry.score >= beta)
+        score = entry.score;
+
+        if(score > 29000)
+            score -= depth;
+        else if(score < -29000)
+            score += depth;
+
+        if(score >= beta)
         {
             SearchStats::ttHits++;
-            score = entry.score;
-                hits++;
+            hits++;
             return true;
         }
         break;
-}
+    }
 
     return false;
 }
@@ -86,18 +106,26 @@ void TT::Store(
     Move bestMove)
 {
     Entry& entry =
-        table[hash % TABLE_SIZE];
+        table[hash & TABLE_MASK];
 
-    // Keep deeper entries
+    // Keep an exact entry of equal or greater depth
     if(entry.hash == hash &&
-       entry.depth > depth)
+       entry.depth >= depth &&
+       entry.flag == EXACT)
     {
         return;
     }
 
     entry.hash = hash;
     entry.depth = depth;
-    entry.score = score;
+
+    if(score > 29000)
+        entry.score = score + depth;
+    else if(score < -29000)
+        entry.score = score - depth;
+    else
+        entry.score = score;
+
     entry.flag = flag;
     entry.bestMove = bestMove;
 }
@@ -105,7 +133,7 @@ void TT::Store(
 Move TT::GetBestMove(U64 hash)
 {
     Entry& entry =
-        table[hash % TABLE_SIZE];
+        table[hash & TABLE_MASK];
 
     if(entry.hash != hash)
         return 0;

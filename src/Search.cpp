@@ -39,6 +39,15 @@ int Quiescence(
 if(stopSearch)
     return Evaluation::Evaluate(board);
 
+Square kingSquare =
+    board.FindKing(board.side);
+
+bool inCheck =
+    AttackDetector::IsSquareAttacked(
+        board,
+        kingSquare,
+        board.side == WHITE ? BLACK : WHITE);
+
 int standPat =
     Evaluation::Evaluate(board);
 
@@ -73,11 +82,17 @@ for(int i = 0; i < moves.count; i++)
 
     Move move = moves.moves[i];
 
-        if(!MoveEncoding::IsCapture(move))
-            continue;
+        if(!inCheck &&
+            !MoveEncoding::IsCapture(move))
+            {
+                continue;
+            }
 
-        if(!SEE::IsGoodCapture(board, move))
+        if(!inCheck &&
+        !SEE::IsGoodCapture(board, move))
+        {
             continue;
+        }
 
             Piece captured =
                 board.pieceOnSquare[
@@ -89,10 +104,10 @@ for(int i = 0; i < moves.count; i++)
                 100,320,330,500,900,20000
             };
 
-            if(standPat +
+            if(!inCheck &&
+            standPat +
             PieceValue[captured] +
-            DELTA_MARGIN
-            < alpha)
+            DELTA_MARGIN < alpha)
             {
                 continue;
             }
@@ -684,13 +699,15 @@ Move FindBestMove(Board& board, int depth)
 {
     stopSearch = false;
 
-    if(useTimeControl)
-        searchStart =
-            std::chrono::steady_clock::now();
-
+    searchStart = std::chrono::steady_clock::now();
     SearchStats::Reset();
 
     Move bestMove = 0;
+
+    int previousScore = 0;
+    bool hasPreviousScore = false;
+
+    constexpr int ASPIRATION_WINDOW = 30;
 
     for(int currentDepth = 1;
         currentDepth <= depth;
@@ -707,8 +724,23 @@ Move FindBestMove(Board& board, int depth)
         Move ttMove =
             TT::GetBestMove(board.hashKey);
 
+        int alpha;
+        int beta;
+
+        if(hasPreviousScore && currentDepth >= 4)
+        {
+            alpha = previousScore - ASPIRATION_WINDOW;
+            beta  = previousScore + ASPIRATION_WINDOW;
+        }
+        else
+        {
+            alpha = -INF;
+            beta  = INF;
+        }
+
         int bestScore = -INF;
         bool firstMove = true;
+        bool aspirationFail = false;
 
         for(int i = 0; i < moves.count; i++)
         {
@@ -768,13 +800,27 @@ Move FindBestMove(Board& board, int depth)
             if(firstMove)
             {
                 score =
-                    -Negamax(
-                        board,
-                        currentDepth - 1,
-                        1,
-                        -INF,
-                        INF,
-                        move);
+    -Negamax(
+        board,
+        currentDepth - 1,
+        1,
+        -beta,
+        -alpha,
+        move);
+
+if(score <= alpha || score >= beta)
+{
+    aspirationFail = true;
+
+    score =
+        -Negamax(
+            board,
+            currentDepth - 1,
+            1,
+            -INF,
+            INF,
+            move);
+}
 
                 firstMove = false;
             }
@@ -814,6 +860,20 @@ Move FindBestMove(Board& board, int depth)
         if(iterationBestMove != 0)
         {
             bestMove = iterationBestMove;
+
+            auto now = std::chrono::steady_clock::now();
+            int timeMs = std::chrono::duration_cast<std::chrono::milliseconds>(now - searchStart).count();
+            uint64_t nodes = SearchStats::nodes;
+            uint64_t nps = timeMs > 0 ? (nodes * 1000) / timeMs : 0;
+            int scoreCp = (board.side == WHITE) ? bestScore : -bestScore;
+
+            std::cout << "info depth " << currentDepth
+                      << " score cp " << scoreCp
+                      << " nodes " << nodes
+                      << " nps " << nps
+                      << " time " << timeMs
+                      << " pv " << MoveEncoding::ToString(iterationBestMove)
+                      << std::endl;
         }
     }
 

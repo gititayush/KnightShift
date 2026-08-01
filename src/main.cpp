@@ -16,7 +16,7 @@ int main()
     TT::Initialize();
 
     // UCI::Loop();
-    RunTACTests(8);
+    RunTACTests(6);
 
     return 0;
 }
