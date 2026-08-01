@@ -282,9 +282,12 @@ export async function calculateEngineMove(
       let bestMove: Move | null = null;
       let bestEval = isWhite ? -Infinity : Infinity;
 
+      // Cap browser fallback search depth to 2 plies for fast <50ms response
+      const searchDepth = Math.min(2, Math.max(1, targetDepth - 1));
+
       for (const move of moves) {
         game.move(move);
-        const evalVal = minimax(game, Math.max(1, targetDepth - 1), -Infinity, Infinity, !isWhite);
+        const evalVal = minimax(game, searchDepth, -Infinity, Infinity, !isWhite);
         game.undo();
 
         if (isWhite) {
