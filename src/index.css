@@ -1,0 +1,188 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --bg-primary: #08080a;
+    --bg-card: rgba(15, 23, 42, 0.7);
+    --text-primary: #f8fafc;
+    --text-secondary: #94a3b8;
+  }
+
+  body {
+    font-family: 'Outfit', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background-color: #08080a;
+    color: #f8fafc;
+    overflow-x: hidden;
+  }
+
+  code, pre, .font-mono {
+    font-family: 'JetBrains Mono', monospace;
+  }
+}
+
+/* ==========================================================================
+   COMPREHENSIVE HIGH-CONTRAST LIGHT MODE DESIGN SYSTEM
+   ========================================================================== */
+html.light body {
+  background-color: #f8fafc !important;
+  color: #0f172a !important;
+}
+
+/* Header & Navbar Logo */
+html.light header {
+  background-color: rgba(255, 255, 255, 0.95) !important;
+  border-color: #e2e8f0 !important;
+}
+
+html.light header span.font-extrabold.text-xl {
+  color: #0f172a !important;
+}
+
+html.light header span.text-slate-400 {
+  color: #64748b !important;
+}
+
+html.light nav a {
+  color: #334155 !important;
+}
+
+html.light nav a:hover {
+  color: #2563eb !important;
+  background-color: #f1f5f9 !important;
+}
+
+/* Glass Panels & Cards in Light Mode */
+html.light .glass-panel {
+  background: #ffffff !important;
+  border-color: #cbd5e1 !important;
+  box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.06) !important;
+}
+
+html.light .glass-panel-glow {
+  background: #ffffff !important;
+  border-color: #cbd5e1 !important;
+  box-shadow: 0 4px 25px -2px rgba(59, 130, 246, 0.12) !important;
+}
+
+/* Headings & Text in Light Mode */
+html.light h1, 
+html.light h2, 
+html.light h3, 
+html.light h4,
+html.light .text-white {
+  color: #0f172a !important;
+}
+
+html.light p, 
+html.light .text-slate-400,
+html.light .text-slate-300 {
+  color: #334155 !important;
+}
+
+/* Fix Buttons in Light Mode */
+html.light button.bg-slate-900\/80,
+html.light button.bg-slate-900,
+html.light button.bg-slate-800,
+html.light button.bg-slate-800\/80,
+html.light div.bg-slate-900,
+html.light div.bg-slate-950 {
+  background-color: #f1f5f9 !important;
+  color: #0f172a !important;
+  border-color: #cbd5e1 !important;
+}
+
+html.light button.bg-slate-900\/80:hover,
+html.light button.bg-slate-900:hover,
+html.light button.bg-slate-800:hover {
+  background-color: #e2e8f0 !important;
+  color: #000000 !important;
+}
+
+/* Preserve Active Highlighted Buttons in Light Mode */
+html.light button.bg-blue-600,
+html.light button.bg-indigo-600 {
+  background-color: #2563eb !important;
+  color: #ffffff !important;
+  border-color: #1d4ed8 !important;
+}
+
+/* Connection Badge in Light Mode */
+html.light span.bg-emerald-500\/20 {
+  background-color: #d1fae5 !important;
+  border-color: #6ee7b7 !important;
+  color: #065f46 !important;
+}
+
+html.light span.bg-amber-500\/10 {
+  background-color: #fef3c7 !important;
+  border-color: #fde68a !important;
+  color: #92400e !important;
+}
+
+/* Side Selector Toggle Box in Light Mode */
+html.light div.bg-slate-900\/90 {
+  background-color: #f8fafc !important;
+  border-color: #cbd5e1 !important;
+}
+
+/* Sections Background */
+html.light section {
+  background-color: #f8fafc !important;
+}
+
+/* Gradient text adjustments */
+.text-gradient-blue {
+  background: linear-gradient(135deg, #2563eb 0%, #3b82f6 50%, #4f46e5 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.text-gradient-silver {
+  background: linear-gradient(135deg, #1e293b 0%, #334155 50%, #475569 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+html.dark .text-gradient-silver {
+  background: linear-gradient(135deg, #ffffff 0%, #cbd5e1 50%, #94a3b8 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* Glow Shadows */
+.shadow-glow-blue {
+  box-shadow: 0 0 25px rgba(59, 130, 246, 0.3);
+}
+
+.shadow-glow-accent {
+  box-shadow: 0 0 25px rgba(99, 102, 241, 0.3);
+}
+
+.shadow-glow-cyan {
+  box-shadow: 0 0 25px rgba(6, 182, 212, 0.3);
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #08080a;
+}
+
+html.light ::-webkit-scrollbar-track {
+  background: #f8fafc;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #1e293b;
+  border-radius: 4px;
+}
+
+html.light ::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+}
