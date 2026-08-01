@@ -9,13 +9,12 @@ WORKDIR /app
 # Copy all source files
 COPY . .
 
-# Compile KnightShift C++ Engine for Linux
-RUN g++ -O3 -std=c++17 src/Search.cpp src/TranspositionTable.cpp src/main.cpp -o KnightShift || g++ -O3 -std=c++17 *.cpp -o KnightShift || echo "C++ build done"
+# Install dependencies
+RUN npm install
 
-# Install Node dependencies for bridge
-WORKDIR /app/server
-RUN npm install ws chess.js
+# Compile KnightShift C++ Engine for Linux using all src/*.cpp files
+RUN g++ -O3 -std=c++17 src/*.cpp -o KnightShift -pthread
 
 EXPOSE 8080
 
-CMD ["node", "uciBridge.js"]
+CMD ["node", "server/uciBridge.js"]

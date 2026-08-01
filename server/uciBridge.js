@@ -2,8 +2,17 @@ import { spawn } from 'child_process';
 import { WebSocketServer } from 'ws';
 import path from 'path';
 
+import fs from 'fs';
+
 const PORT = process.env.PORT || 8080;
-const ENGINE_PATH = process.env.KNIGHTSHIFT_PATH || (process.platform === 'win32' ? './KnightShift.exe' : '../KnightShift');
+
+let ENGINE_PATH = process.env.KNIGHTSHIFT_PATH || (process.platform === 'win32' ? './KnightShift.exe' : './KnightShift');
+if (!fs.existsSync(ENGINE_PATH) && fs.existsSync('../KnightShift')) {
+  ENGINE_PATH = '../KnightShift';
+}
+if (!fs.existsSync(ENGINE_PATH) && fs.existsSync('/app/KnightShift')) {
+  ENGINE_PATH = '/app/KnightShift';
+}
 
 console.log(`====================================================`);
 console.log(`🛡️  KNIGHTSHIFT C++ ENGINE UCI WEB-SOCKET BRIDGE`);
