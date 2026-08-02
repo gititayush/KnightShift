@@ -89,40 +89,26 @@ if(!MoveEncoding::IsCapture(move))
     return 700000 + score;
 }
     if(MoveEncoding::IsCapture(move))
-{
-    int attacker =
-        static_cast<int>(
-            MoveEncoding::PieceMoved(move)) % 6;
-
-    int victim =
-        static_cast<int>(
-            board.pieceOnSquare[
-                MoveEncoding::To(move)]) % 6;
-
-    int score =
-        MVVLVA[attacker][victim];
-
-    bool goodCapture =
-        SEE::IsGoodCapture(
-            board,
-            move);
-
-   if(goodCapture)
-{
-    if(PieceValue[victim] > PieceValue[attacker])
     {
-        return 1300000 + score;
+        int attacker = static_cast<int>(MoveEncoding::PieceMoved(move)) % 6;
+        int victim   = static_cast<int>(board.pieceOnSquare[MoveEncoding::To(move)]) % 6;
+        int mvvLva   = MVVLVA[attacker][victim];
+
+        int seeVal = SEE::Evaluate(board, move);
+
+        if (seeVal > 0)
+        {
+            return 1500000 + seeVal;
+        }
+        else if (seeVal == 0)
+        {
+            return 1000000 + mvvLva;
+        }
+        else
+        {
+            return 100000 + mvvLva;
+        }
     }
-
-    return 1200000 + score;
-}
-
-if(PieceValue[victim] >= PieceValue[attacker])
-{
-    return 600000 + score;
-}
-
-return 10000 + score;
 }
     return 0;
 }

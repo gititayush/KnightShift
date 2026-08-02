@@ -42,7 +42,8 @@ namespace TT
         int depth,
         int alpha,
         int beta,
-        int& score);
+        int& score,
+        int ply);
 
     Move GetBestMove(U64 hash);
 
@@ -51,5 +52,6 @@ namespace TT
         int depth,
         int score,
         Flag flag,
-        Move bestMove);
+        Move bestMove,
+        int ply);
 }

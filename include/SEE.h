@@ -4,7 +4,6 @@
 
 namespace SEE
 {
-    bool IsGoodCapture(
-        const Board& board,
-        Move move);
+    int Evaluate(const Board& board, Move move);
+    bool IsGoodCapture(const Board& board, Move move, int threshold = 0);
 }

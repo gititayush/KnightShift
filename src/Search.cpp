@@ -230,7 +230,8 @@ if(TT::Probe(
         depth,
         alpha,
         beta,
-        ttScore))
+        ttScore,
+        ply))
 {
     return ttScore;
 }
@@ -702,7 +703,8 @@ TT::Store(
     originalDepth,
     alpha,
     flag,
-    bestMove);
+    bestMove,
+    ply);
 
 return alpha;
 

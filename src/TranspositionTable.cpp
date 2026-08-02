@@ -37,7 +37,8 @@ bool TT::Probe(
     int depth,
     int alpha,
     int beta,
-    int& score)
+    int& score,
+    int ply)
 {
     SearchStats::ttProbes++;
     probes++;
@@ -58,9 +59,9 @@ bool TT::Probe(
         score = entry.score;
 
         if(score > 29000)
-            score -= depth;
+            score -= ply;
         else if(score < -29000)
-            score += depth;
+            score += ply;
 
         switch(entry.flag)
         {
@@ -97,7 +98,8 @@ void TT::Store(
     int depth,
     int score,
     Flag flag,
-    Move bestMove)
+    Move bestMove,
+    int ply)
 {
     Bucket& bucket =
         table[hash & TABLE_MASK];
@@ -145,9 +147,9 @@ void TT::Store(
     replace->depth = depth;
 
     if(score > 29000)
-        replace->score = score + depth;
+        replace->score = score + ply;
     else if(score < -29000)
-        replace->score = score - depth;
+        replace->score = score - ply;
     else
         replace->score = score;
 
