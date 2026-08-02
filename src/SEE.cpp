@@ -104,11 +104,12 @@ int Evaluate(const Board& board, Move move)
 
     Piece attackerPiece = MoveEncoding::PieceMoved(move);
     Piece capturedPiece = board.pieceOnSquare[to];
+    int initialVal = (capturedPiece >= 0 && capturedPiece < 12) ? PieceValue[capturedPiece] : 100;
 
     int gain[32];
     int d = 0;
 
-    gain[d] = PieceValue[capturedPiece];
+    gain[d] = initialVal;
 
     U64 occ = board.occupancies[BOTH];
     U64 attackers = GetAttackers(board, to, occ);
@@ -129,7 +130,8 @@ int Evaluate(const Board& board, Move move)
     while (d < 30)
     {
         d++;
-        gain[d] = PieceValue[currentAttackerPiece] - gain[d - 1];
+        int attackerVal = (currentAttackerPiece >= 0 && currentAttackerPiece < 12) ? PieceValue[currentAttackerPiece] : 100;
+        gain[d] = attackerVal - gain[d - 1];
 
         if (std::max(-gain[d - 1], gain[d]) < 0)
             break;

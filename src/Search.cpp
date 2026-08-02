@@ -457,6 +457,7 @@ bool reduce =
     legalMoves > 1 &&
     depth >= 4 &&
     !pvNode &&
+    !inCheck &&
     legalMoves >= 5 &&
     !MoveEncoding::IsCapture(move) &&
     !givesCheck &&
