@@ -6,6 +6,7 @@
 #include "Search.h"
 #include <cstring>
 #include "TranspositionTable.h"
+#include "SearchStats.h"
 #include "Evaluation.h"
 #include "Perft.h"
 namespace UCI
