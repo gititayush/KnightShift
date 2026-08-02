@@ -1844,6 +1844,36 @@ void EvaluateMobility(
     }
 }
 
+void EvaluatePawnAttacksOnPieces(const Board& board, Score& score)
+{
+    constexpr U64 NOT_A_FILE = 0xFEFEFEFEFEFEFEFEULL;
+    constexpr U64 NOT_H_FILE = 0x7F7F7F7F7F7F7F7FULL;
+
+    U64 wp = board.bitboards[WP];
+    U64 bp = board.bitboards[BP];
+
+    U64 wPawnAttacks = ((wp & NOT_A_FILE) << 7) | ((wp & NOT_H_FILE) << 9);
+    U64 bPawnAttacks = ((bp & NOT_A_FILE) >> 9) | ((bp & NOT_H_FILE) >> 7);
+
+    // White pieces under attack by Black pawns
+    U64 wKnightsBishops = (board.bitboards[WN] | board.bitboards[WB]) & bPawnAttacks;
+    U64 wRooks          = board.bitboards[WR] & bPawnAttacks;
+    U64 wQueens         = board.bitboards[WQ] & bPawnAttacks;
+
+    score.Sub(Bitboard::CountBits(wKnightsBishops) * 180, Bitboard::CountBits(wKnightsBishops) * 220);
+    score.Sub(Bitboard::CountBits(wRooks) * 300, Bitboard::CountBits(wRooks) * 350);
+    score.Sub(Bitboard::CountBits(wQueens) * 500, Bitboard::CountBits(wQueens) * 600);
+
+    // Black pieces under attack by White pawns
+    U64 bKnightsBishops = (board.bitboards[BN] | board.bitboards[BB]) & wPawnAttacks;
+    U64 bRooks          = board.bitboards[BR] & wPawnAttacks;
+    U64 bQueens         = board.bitboards[BQ] & wPawnAttacks;
+
+    score.Add(Bitboard::CountBits(bKnightsBishops) * 180, Bitboard::CountBits(bKnightsBishops) * 220);
+    score.Add(Bitboard::CountBits(bRooks) * 300, Bitboard::CountBits(bRooks) * 350);
+    score.Add(Bitboard::CountBits(bQueens) * 500, Bitboard::CountBits(bQueens) * 600);
+}
+
 int Evaluate(
     const Board& board)
 {
@@ -1878,6 +1908,10 @@ int Evaluate(
         score);
 
     EvaluateMobility(
+        board,
+        score);
+
+    EvaluatePawnAttacksOnPieces(
         board,
         score);
 
