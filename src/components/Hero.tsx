@@ -135,7 +135,7 @@ export const Hero: React.FC = () => {
           </div>
           <div className="p-4 rounded-xl glass-panel">
             <div className="text-xs text-slate-400 font-mono mb-1">ESTIMATED ELO</div>
-            <div className="text-2xl font-bold font-mono text-cyan-400">~1950 Elo</div>
+            <div className="text-2xl font-bold font-mono text-cyan-400">~2200 Elo</div>
           </div>
           <div className="p-4 rounded-xl glass-panel">
             <div className="text-xs text-slate-400 font-mono mb-1">BOARD REPR.</div>
