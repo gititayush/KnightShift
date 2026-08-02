@@ -43,8 +43,11 @@ if(MoveEncoding::PromotionPiece(move) != NO_PIECE)
 }
 if(MoveEncoding::IsCapture(move))
 {
-    int attacker = static_cast<int>(MoveEncoding::PieceMoved(move)) % 6;
-    int victim   = static_cast<int>(board.pieceOnSquare[MoveEncoding::To(move)]) % 6;
+    Piece attackerPiece = MoveEncoding::PieceMoved(move);
+    Piece victimPiece = board.pieceOnSquare[MoveEncoding::To(move)];
+
+    int attacker = (attackerPiece >= 0 && attackerPiece < 12) ? (static_cast<int>(attackerPiece) % 6) : 0;
+    int victim   = (victimPiece >= 0 && victimPiece < 12) ? (static_cast<int>(victimPiece) % 6) : 0;
     int mvvLva   = MVVLVA[attacker][victim];
 
     int seeVal = SEE::Evaluate(board, move);

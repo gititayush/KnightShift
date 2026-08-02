@@ -100,20 +100,17 @@ for(int i = 0; i < moves.count; i++)
             continue;
         }
 
-            Piece captured =
-                board.pieceOnSquare[
-                    MoveEncoding::To(move)];
+            Piece captured = board.pieceOnSquare[MoveEncoding::To(move)];
 
-            constexpr int PieceValue[12] =
+            constexpr int PieceValueTable[12] =
             {
                 100,320,330,500,900,20000,
                 100,320,330,500,900,20000
             };
 
-            if(!inCheck &&
-            standPat +
-            PieceValue[captured] +
-            DELTA_MARGIN < alpha)
+            int capturedVal = (captured >= 0 && captured < 12) ? PieceValueTable[captured] : 100;
+
+            if(!inCheck && standPat + capturedVal + DELTA_MARGIN < alpha)
             {
                 continue;
             }
