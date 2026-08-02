@@ -6,9 +6,9 @@
 #include "MoveGenerator.h"
 #include "TranspositionTable.h"
 #include "SearchStats.h"
+#include "Bitboard.h"
 #include <cstring>
 #include "SEE.h"
-#include "OpeningBook.h"
 #include <iostream>
 #include <chrono>
 namespace Search
@@ -21,11 +21,13 @@ bool useTimeControl = false;
 std::chrono::steady_clock::time_point searchStart;
 
 Move killerMoves[2][MAX_PLY] = {};
-Move counterMoves[64][64] = {};
 int historyTable[12][64] = {};
 int continuationHistory
     [12][64]
     [12][64] = {};
+
+Move counterMoves[64][64] = {};
+
 Move pvTable[MAX_DEPTH][MAX_DEPTH] = {};
 
 int pvLength[MAX_DEPTH] = {};
@@ -62,14 +64,7 @@ int standPat =
         alpha = standPat;
 
     MoveList moves;
-    if (inCheck)
-    {
-        MoveGenerator::Generate(board, moves);
-    }
-    else
-    {
-        MoveGenerator::GenerateCaptures(board, moves);
-    }
+    MoveGenerator::Generate(board, moves);
 
 for(int i = 0; i < moves.count; i++)
 {
@@ -196,14 +191,11 @@ int Negamax(
     }
 }
 
-    if(ply > 100)
-{
-    std::cout << "PLY = " << ply
-              << " DEPTH = " << depth
-              << std::endl;
-    std::abort();
-}
-   int ttScore;
+    if (ply >= 95)
+    {
+        return Evaluation::Evaluate(board);
+    }
+   int ttScore = 0;
 
 int originalAlpha = alpha;
 int originalDepth = depth;
@@ -246,6 +238,19 @@ if(TT::Probe(
 int staticEval =
     Evaluation::Evaluate(board);
 
+   // =========================
+// Static Null Move Pruning
+// =========================
+
+if(!pvNode &&
+   !inCheck &&
+   depth <= 6)
+{
+int margin = 90 + depth * 90;
+    if(staticEval - margin >= beta)
+        return staticEval;
+} 
+
 // =========================
 // Reverse Futility Pruning
 // =========================
@@ -254,8 +259,7 @@ if(depth <= 3 &&
    !pvNode &&
    !inCheck)
 {
-    constexpr int FUTILITY_MARGIN = 120;
-
+constexpr int FUTILITY_MARGIN = 120;
     if(staticEval - depth * FUTILITY_MARGIN >= beta)
     {
         return staticEval;
@@ -277,7 +281,7 @@ if(useIID)
 
     Negamax(
         board,
-        depth - 3,
+        depth - 2,
         ply,
         -INF,
         INF,
@@ -306,19 +310,23 @@ if(alpha >= beta)
 // =========================
 
 
-bool hasMajorPiece = false;
+int nonPawnMaterial = 0;
+
+constexpr int PieceValue[12] =
+{
+    0,320,330,500,900,0,
+    0,320,330,500,900,0
+};
 
 for(int piece = WN; piece <= BQ; piece++)
 {
-    if(board.bitboards[piece])
-    {
-        hasMajorPiece = true;
-        break;
-    }
+    nonPawnMaterial +=
+        PieceValue[piece] *
+        Bitboard::CountBits(board.bitboards[piece]);
 }
 
 if(allowNullMove &&
-   hasMajorPiece &&
+   nonPawnMaterial >= 1200 &&
    depth >= 4 &&
    !inCheck)
    {
@@ -326,8 +334,19 @@ if(allowNullMove &&
 
     board.MakeNullMove(nullUndo);
 
- int NULL_REDUCTION =
-        (depth >= 6) ? 3 : 2;
+int NULL_REDUCTION = 3;
+
+if(depth >= 8)
+    NULL_REDUCTION++;
+
+if(depth >= 10)
+    NULL_REDUCTION++;
+
+if(pvNode)
+    NULL_REDUCTION--;
+
+if(NULL_REDUCTION < 2)
+    NULL_REDUCTION = 2;
 
 int score =
     -Negamax(
@@ -341,8 +360,29 @@ int score =
 
     board.UndoNullMove(nullUndo);
 
-    if(score >= beta)
+if(score >= beta)
+{
+    // Verify the cutoff in deeper searches.
+    if(depth >= 8)
+    {
+        int verify =
+            Negamax(
+                board,
+                depth - 4,
+                ply,
+                beta - 1,
+                beta,
+                previousMove,
+                false);
+
+        if(verify >= beta)
+            return beta;
+    }
+    else
+    {
         return beta;
+    }
+}
 }
 
 
@@ -384,17 +424,23 @@ int score =
 // Late Move Pruning
 // =========================
 
-if(depth <= 2 &&
+if(depth <= 3 &&
    !pvNode &&
-   legalMoves >= 14 &&
-   (
-      !MoveEncoding::IsCapture(move) &&
-      !SEE::IsGoodCapture(board, move)
-   ) &&
+   legalMoves >= depth * 4 &&
+   !MoveEncoding::IsCapture(move) &&
    move != killerMoves[0][ply] &&
    move != killerMoves[1][ply])
 {
-    continue;
+    Piece piece =
+        MoveEncoding::PieceMoved(move);
+
+    Square to =
+        MoveEncoding::To(move);
+
+    if(historyTable[piece][to] < -2000)
+    {
+        continue;
+    }
 }
 
         UndoInfo undo;
@@ -413,42 +459,6 @@ if(depth <= 2 &&
 
         legalMoves++;
 
-        // =========================
-// Late Move Pruning
-// =========================
-// =========================
-// Futility Pruning
-// =========================
-
-// if(depth == 1 &&
-//    !pvNode &&
-//    !inCheck &&
-//    !MoveEncoding::IsCapture(move))
-// {
-//     constexpr int FUTILITY_MARGIN = 150;
-
-//     if(staticEval + FUTILITY_MARGIN <= alpha)
-//     {
-//         board.UndoMove(move, undo);
-//         continue;
-//     }
-// }
-
-int fullDepth = depth - 1;
-int searchDepth = fullDepth;
-// // Check Extension
-// Square enemyKing =
-//     board.FindKing(board.side);
-
-// if(depth > 2 &&
-//    AttackDetector::IsSquareAttacked(
-//         board,
-//         enemyKing,
-//         mover))
-// {
-//     searchDepth++;
-// }
-
 Square enemyKing =
     board.FindKing(board.side);
 
@@ -458,33 +468,99 @@ bool givesCheck =
         enemyKing,
         mover);
 
+        // =========================
+// Late Move Pruning
+// =========================
+// =========================
+// Futility Pruning
+// =========================
+
+if(depth <= 2 &&
+   !pvNode &&
+   !inCheck &&
+   !MoveEncoding::IsCapture(move) &&
+   !givesCheck)
+{
+constexpr int FUTILITY_MARGIN = 120;
+    if(staticEval + depth * FUTILITY_MARGIN <= alpha)
+    {
+        board.UndoMove(move, undo);
+        continue;
+    }
+}
+
+int fullDepth = depth - 1;
+
+int extension = 0;
+// Singular Extension for TT best move at depth >= 7
+if (depth >= 7 && move == ttMove && !pvNode && !inCheck && ply < 60 && ttMove != 0 && std::abs(ttScore) < 20000)
+{
+    int singularBeta = ttScore - (depth * 2);
+    int singularScore = Negamax(board, (depth - 1) / 2, ply + 1, singularBeta - 1, singularBeta, previousMove, false);
+    if (singularScore < singularBeta)
+    {
+        extension = 1;
+    }
+}
+
+int searchDepth = fullDepth + extension;
+
 bool reduce =
     legalMoves > 1 &&
-    depth >= 4 &&
+    depth >= 3 &&
     !pvNode &&
-    legalMoves >= 5 &&
+    legalMoves >= 4 &&
     !MoveEncoding::IsCapture(move) &&
     !givesCheck &&
     move != killerMoves[0][ply] &&
-    move != killerMoves[1][ply];
+    move != killerMoves[1][ply] &&
+    move != ttMove;
 
 if(reduce)
 {
     SearchStats::lmrReduced++;
 
+
 int reduction = 1;
 
-if(depth >= 10)
-    reduction++;
+reduction += depth / 4;
+reduction += legalMoves / 8;
 
-if(depth >= 14)
-    reduction++;
+if(historyTable[
+        MoveEncoding::PieceMoved(move)]
+        [MoveEncoding::To(move)] > 4000)
+{
+    reduction--;
+}
 
-if(legalMoves >= 16)
+if(historyTable[
+        MoveEncoding::PieceMoved(move)]
+        [MoveEncoding::To(move)] < -3000)
+{
     reduction++;
+}
 
-if(reduction > 3)
-    reduction = 3;
+reduction = std::max(1, reduction);
+reduction = std::min(reduction, fullDepth - 1);
+
+// if(historyTable[
+//         MoveEncoding::PieceMoved(move)]
+//         [MoveEncoding::To(move)] < -3000)
+// {
+//     reduction++;
+// }
+
+// if(historyTable[
+//         MoveEncoding::PieceMoved(move)]
+//         [MoveEncoding::To(move)] > 4000)
+// {
+//     reduction--;
+// }
+
+// if(reduction < 1)
+//     reduction = 1;
+
+// reduction = std::min(reduction, fullDepth - 1);
 
     searchDepth -= reduction;
 
@@ -514,11 +590,22 @@ int score;
                     -alpha - 1,
                     -alpha,move);
 
-                   if(reduce)
+                   if(reduce && score > alpha)
 {
-    if(score > alpha)
+    SearchStats::lmrResearches++;
+
+    score =
+        -Negamax(
+            board,
+            fullDepth,
+            ply + 1,
+            -alpha - 1,
+            -alpha,
+            move);
+
+    if(score > alpha && score < beta)
     {
-        SearchStats::lmrResearches++;
+        SearchStats::pvsResearches++;
 
         score =
             -Negamax(
@@ -530,20 +617,18 @@ int score;
                 move);
     }
 }
-else
+else if(!reduce && score > alpha && score < beta)
 {
-    if(score > alpha && score < beta)
-    {
-        SearchStats::pvsResearches++;
+    SearchStats::pvsResearches++;
 
-        score =
-            -Negamax(
-                board,
-                depth - 1,
-                ply + 1,
-                -beta,
-                -alpha,move);
-    }
+    score =
+        -Negamax(
+            board,
+            fullDepth,
+            ply + 1,
+            -beta,
+            -alpha,
+            move);
 }
     }
 
@@ -582,6 +667,17 @@ if(score > alpha)
                         killerMoves[0][ply] =
                             move;
                     }
+
+                    if(previousMove != 0)
+{
+    Square prevFrom =
+        MoveEncoding::From(previousMove);
+
+    Square prevTo =
+        MoveEncoding::To(previousMove);
+
+    counterMoves[prevFrom][prevTo] = move;
+}
                         SearchStats::killerUpdates++;
 
                     Piece piece =
@@ -591,8 +687,7 @@ if(score > alpha)
                         MoveEncoding::To(move);
 
 int bonus =
-    depth * depth +
-    depth;
+    depth * depth * 3;
 historyTable[piece][to] +=
 (
     bonus *
@@ -619,8 +714,7 @@ for(int j = 0; j < i; j++)
     Square sq =
         MoveEncoding::To(prev);
 
-    int malus = depth * depth;
-
+int malus = depth * depth * 3;
     historyTable[p][sq] -=
     (
         malus *
@@ -711,14 +805,6 @@ Move FindBestMove(Board& board, int depth)
 {
     stopSearch = false;
 
-    // Check Opening Book first
-    Move bookMove = OpeningBook::GetBookMove(board);
-    if (bookMove != 0)
-    {
-        std::cout << "info string Opening Book move played" << std::endl;
-        return bookMove;
-    }
-
     searchStart = std::chrono::steady_clock::now();
     SearchStats::Reset();
 
@@ -727,7 +813,7 @@ Move FindBestMove(Board& board, int depth)
     int previousScore = 0;
     bool hasPreviousScore = false;
 
-    constexpr int ASPIRATION_WINDOW = 30;
+int aspirationWindow = 30;
 
     for(int currentDepth = 1;
         currentDepth <= depth;
@@ -749,9 +835,10 @@ Move FindBestMove(Board& board, int depth)
 
         if(hasPreviousScore && currentDepth >= 4)
         {
-            alpha = previousScore - ASPIRATION_WINDOW;
-            beta  = previousScore + ASPIRATION_WINDOW;
+            alpha = previousScore - aspirationWindow;
+            beta  = previousScore + aspirationWindow;
         }
+
         else
         {
             alpha = -INF;
@@ -828,7 +915,7 @@ Move FindBestMove(Board& board, int depth)
         -alpha,
         move);
 
-if(score <= alpha || score >= beta)
+if(score <= alpha)
 {
     aspirationFail = true;
 
@@ -838,10 +925,22 @@ if(score <= alpha || score >= beta)
             currentDepth - 1,
             1,
             -INF,
+            -alpha,
+            move);
+}
+else if(score >= beta)
+{
+    aspirationFail = true;
+
+    score =
+        -Negamax(
+            board,
+            currentDepth - 1,
+            1,
+            -beta,
             INF,
             move);
 }
-
                 firstMove = false;
             }
             else
@@ -877,17 +976,15 @@ if(score <= alpha || score >= beta)
             }
         }
 
-        if(!stopSearch && iterationBestMove != 0)
+        if(iterationBestMove != 0)
         {
             bestMove = iterationBestMove;
-            previousScore = bestScore;
-            hasPreviousScore = true;
 
             auto now = std::chrono::steady_clock::now();
             int timeMs = std::chrono::duration_cast<std::chrono::milliseconds>(now - searchStart).count();
             uint64_t nodes = SearchStats::nodes;
             uint64_t nps = timeMs > 0 ? (nodes * 1000) / timeMs : 0;
-            int scoreCp = bestScore;
+            int scoreCp = (board.side == WHITE) ? bestScore : -bestScore;
 
             std::cout << "info depth " << currentDepth
                       << " score cp " << scoreCp
@@ -897,17 +994,21 @@ if(score <= alpha || score >= beta)
                       << " pv " << MoveEncoding::ToString(iterationBestMove)
                       << std::endl;
         }
+
+            if(aspirationFail)
+{
+aspirationWindow *= 2;
+
+if(aspirationWindow > 250)
+    aspirationWindow = 250;
+}
+else
+{
+    aspirationWindow = 30;
+}
     }
 
-    if (bestMove == 0)
-    {
-        MoveList moves;
-        MoveGenerator::Generate(board, moves);
-        if (moves.count > 0)
-        {
-            bestMove = moves.moves[0];
-        }
-    }
+
 
     return bestMove;
 }
