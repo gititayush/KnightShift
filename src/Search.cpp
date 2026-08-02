@@ -871,15 +871,17 @@ if(score <= alpha || score >= beta)
             }
         }
 
-        if(iterationBestMove != 0)
+        if(!stopSearch && iterationBestMove != 0)
         {
             bestMove = iterationBestMove;
+            previousScore = bestScore;
+            hasPreviousScore = true;
 
             auto now = std::chrono::steady_clock::now();
             int timeMs = std::chrono::duration_cast<std::chrono::milliseconds>(now - searchStart).count();
             uint64_t nodes = SearchStats::nodes;
             uint64_t nps = timeMs > 0 ? (nodes * 1000) / timeMs : 0;
-            int scoreCp = (board.side == WHITE) ? bestScore : -bestScore;
+            int scoreCp = bestScore;
 
             std::cout << "info depth " << currentDepth
                       << " score cp " << scoreCp
@@ -888,6 +890,16 @@ if(score <= alpha || score >= beta)
                       << " time " << timeMs
                       << " pv " << MoveEncoding::ToString(iterationBestMove)
                       << std::endl;
+        }
+    }
+
+    if (bestMove == 0)
+    {
+        MoveList moves;
+        MoveGenerator::Generate(board, moves);
+        if (moves.count > 0)
+        {
+            bestMove = moves.moves[0];
         }
     }
 
