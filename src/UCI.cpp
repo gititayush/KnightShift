@@ -6,7 +6,7 @@
 #include "Search.h"
 #include <cstring>
 #include "TranspositionTable.h"
-#include "Evaluation2.h"
+#include "Evaluation.h"
 #include "Perft.h"
 namespace UCI
 {
@@ -117,7 +117,7 @@ void Loop()
         else if(token == "eval")
             {
                 std::cout
-                    << Evaluation2::Evaluate(board)
+                    << Evaluation::Evaluate(board)
                     << '\n';
             }
 
