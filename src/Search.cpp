@@ -187,13 +187,10 @@ int Negamax(
     }
 }
 
-    if(ply > 100)
-{
-    std::cout << "PLY = " << ply
-              << " DEPTH = " << depth
-              << std::endl;
-    std::abort();
-}
+    if (ply >= 95)
+    {
+        return Evaluation::Evaluate(board);
+    }
    int ttScore = 0;
 
 int originalAlpha = alpha;
@@ -497,7 +494,7 @@ if (givesCheck && depth > 2)
     extension = 1;
 }
 // Singular Extension for TT best move
-else if (depth >= 6 && move == ttMove && !pvNode && ply < MAX_PLY - 2 && ttMove != 0)
+else if (depth >= 6 && move == ttMove && !pvNode && !inCheck && ply < 80 && ttMove != 0)
 {
     int singularBeta = ttScore - (depth * 2);
     int singularScore = Negamax(board, (depth - 1) / 2, ply + 1, singularBeta - 1, singularBeta, previousMove, false);
