@@ -150,13 +150,15 @@ Move GetBookMove(const Board& board)
                 if (from == C2 && to == C4) candidates.push_back(m);
                 if (from == G1 && to == F3) candidates.push_back(m);
             }
-            // Black vs 1.e4: 1... c7c5 (Sicilian), 1... e7e5 (Open), 1... e7e6 (French), 1... c7c6 (Caro-Kann)
+            // Black move 1 vs 1.e4 / 1.d4: c7c5, e7e5, e7e6, c7c6, g8f6, d7d5
             else if (totalPlies == 1)
             {
                 if (from == C7 && to == C5) candidates.push_back(m);
                 if (from == E7 && to == E5) candidates.push_back(m);
                 if (from == E7 && to == E6) candidates.push_back(m);
                 if (from == C7 && to == C6) candidates.push_back(m);
+                if (from == G8 && to == F6) candidates.push_back(m);
+                if (from == D7 && to == D5) candidates.push_back(m);
             }
         }
 

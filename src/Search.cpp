@@ -10,6 +10,7 @@
 #include "SEE.h"
 #include <iostream>
 #include <chrono>
+#include "OpeningBook.h"
 namespace Search
 {
 
@@ -172,21 +173,16 @@ int Negamax(
 
     SearchStats::nodes++;
 
-    if(useTimeControl &&
-   (SearchStats::nodes & 2047) == 0)
-{
-    auto elapsed =
-        std::chrono::duration_cast<
-        std::chrono::milliseconds>(
-            std::chrono::steady_clock::now()
-            - searchStart).count();
-
-    if(elapsed >= searchTime)
+    if(useTimeControl && (SearchStats::nodes & 2047) == 0)
     {
-        stopSearch = true;
-        return 0;
+        auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - searchStart).count();
+
+        if(elapsed >= searchTime)
+        {
+            stopSearch = true;
+            return Evaluation::Evaluate(board);
+        }
     }
-}
 
     if(ply > 100)
 {
@@ -713,6 +709,14 @@ return alpha;
 Move FindBestMove(Board& board, int depth)
 {
     stopSearch = false;
+
+    // Check Opening Book first
+    Move bookMove = OpeningBook::GetBookMove(board);
+    if (bookMove != 0)
+    {
+        std::cout << "info string Opening Book move played" << std::endl;
+        return bookMove;
+    }
 
     searchStart = std::chrono::steady_clock::now();
     SearchStats::Reset();
