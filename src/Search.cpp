@@ -8,6 +8,7 @@
 #include "SearchStats.h"
 #include <cstring>
 #include "SEE.h"
+#include "OpeningBook.h"
 #include <iostream>
 #include <chrono>
 namespace Search
@@ -703,6 +704,14 @@ return alpha;
 Move FindBestMove(Board& board, int depth)
 {
     stopSearch = false;
+
+    // Check Opening Book first
+    Move bookMove = OpeningBook::GetBookMove(board);
+    if (bookMove != 0)
+    {
+        std::cout << "info string Opening Book move played" << std::endl;
+        return bookMove;
+    }
 
     searchStart = std::chrono::steady_clock::now();
     SearchStats::Reset();

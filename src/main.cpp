@@ -7,6 +7,7 @@
 #include "SearchStats.h"
 #include "TranspositionTable.h"
 #include "Zobrist.h"
+#include "OpeningBook.h"
 #include "UCI.h"
 
 int main()
@@ -14,9 +15,10 @@ int main()
     AttackTables::Initialize();
     Zobrist::Initialize();
     TT::Initialize();
+    OpeningBook::Initialize();
 
-    // UCI::Loop();
-    RunTACTests(6);
+    UCI::Loop();
+    // RunTACTests(6);
 
     return 0;
 }
