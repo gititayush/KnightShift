@@ -298,43 +298,51 @@ if(alpha >= beta)
 // =========================
 
 
-bool hasMajorPiece = false;
-
-for(int piece = WN; piece <= BQ; piece++)
+bool sideHasNonPawnPieces = false;
+if (board.side == WHITE)
 {
-    if(board.bitboards[piece])
-    {
-        hasMajorPiece = true;
-        break;
-    }
+    sideHasNonPawnPieces = (board.bitboards[WN] | board.bitboards[WB] | board.bitboards[WR] | board.bitboards[WQ]) != 0;
+}
+else
+{
+    sideHasNonPawnPieces = (board.bitboards[BN] | board.bitboards[BB] | board.bitboards[BR] | board.bitboards[BQ]) != 0;
 }
 
 if(allowNullMove &&
-   hasMajorPiece &&
-   depth >= 4 &&
+   sideHasNonPawnPieces &&
+   depth >= 3 &&
    !inCheck)
-   {
+{
     NullUndo nullUndo;
-
     board.MakeNullMove(nullUndo);
 
- int NULL_REDUCTION =
-        (depth >= 6) ? 3 : 2;
+    int R = 2 + depth / 4;
 
-int score =
-    -Negamax(
-        board,
-        depth - 1 - NULL_REDUCTION,
-        ply + 1,
-        -beta,
-        -beta + 1,
-        0,
-        false);
+    int score =
+        -Negamax(
+            board,
+            depth - 1 - R,
+            ply + 1,
+            -beta,
+            -beta + 1,
+            0,
+            false);
 
     board.UndoNullMove(nullUndo);
 
     if(score >= beta)
-        return beta;
+    {
+        if(depth >= 8)
+        {
+            int verify = Negamax(board, depth - R, ply, beta - 1, beta, 0, false);
+            if(verify >= beta)
+                return beta;
+        }
+        else
+        {
+            return beta;
+        }
+    }
 }
 
 
