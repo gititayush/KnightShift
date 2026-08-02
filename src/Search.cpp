@@ -862,7 +862,7 @@ if(score <= alpha || score >= beta)
             }
         }
 
-        if(iterationBestMove != 0)
+        if(!stopSearch && iterationBestMove != 0)
         {
             bestMove = iterationBestMove;
 
