@@ -92,23 +92,23 @@ Move GetBookMove(const Board& board)
     if (!loadedBook.empty())
     {
         U64 hash = board.hashKey;
-        auto range = std::equal_range(loadedBook.begin(), loadedBook.end(), hash,
-            [](const BookEntry& e, U64 key) { return e.key < key; });
-
         std::vector<std::pair<Move, int>> matchedMoves;
 
-        for (auto it = range.first; it != range.second; ++it)
+        for (const auto& entry : loadedBook)
         {
-            Square from = static_cast<Square>((it->move >> 6) & 0x3F);
-            Square to = static_cast<Square>(it->move & 0x3F);
-
-            for (int i = 0; i < legalMoves.count; i++)
+            if (entry.key == hash)
             {
-                Move m = legalMoves.moves[i];
-                if (MoveEncoding::From(m) == from && MoveEncoding::To(m) == to)
+                Square from = static_cast<Square>((entry.move >> 6) & 0x3F);
+                Square to = static_cast<Square>(entry.move & 0x3F);
+
+                for (int i = 0; i < legalMoves.count; i++)
                 {
-                    matchedMoves.push_back({ m, std::max(1, (int)it->weight) });
-                    break;
+                    Move m = legalMoves.moves[i];
+                    if (MoveEncoding::From(m) == from && MoveEncoding::To(m) == to)
+                    {
+                        matchedMoves.push_back({ m, std::max(1, (int)entry.weight) });
+                        break;
+                    }
                 }
             }
         }
