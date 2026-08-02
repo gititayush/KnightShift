@@ -1844,7 +1844,7 @@ void EvaluateMobility(
     }
 }
 
-void EvaluatePawnAttacksOnPieces(const Board& board, Score& score)
+void EvaluatePieceSafetyAndHanging(const Board& board, Score& score)
 {
     constexpr U64 NOT_A_FILE = 0xFEFEFEFEFEFEFEFEULL;
     constexpr U64 NOT_H_FILE = 0x7F7F7F7F7F7F7F7FULL;
@@ -1855,7 +1855,7 @@ void EvaluatePawnAttacksOnPieces(const Board& board, Score& score)
     U64 wPawnAttacks = ((wp & NOT_A_FILE) << 7) | ((wp & NOT_H_FILE) << 9);
     U64 bPawnAttacks = ((bp & NOT_A_FILE) >> 9) | ((bp & NOT_H_FILE) >> 7);
 
-    // White pieces under attack by Black pawns
+    // 1. Pawn Attacks on Pieces
     U64 wKnightsBishops = (board.bitboards[WN] | board.bitboards[WB]) & bPawnAttacks;
     U64 wRooks          = board.bitboards[WR] & bPawnAttacks;
     U64 wQueens         = board.bitboards[WQ] & bPawnAttacks;
@@ -1864,7 +1864,6 @@ void EvaluatePawnAttacksOnPieces(const Board& board, Score& score)
     score.Sub(Bitboard::CountBits(wRooks) * 300, Bitboard::CountBits(wRooks) * 350);
     score.Sub(Bitboard::CountBits(wQueens) * 500, Bitboard::CountBits(wQueens) * 600);
 
-    // Black pieces under attack by White pawns
     U64 bKnightsBishops = (board.bitboards[BN] | board.bitboards[BB]) & wPawnAttacks;
     U64 bRooks          = board.bitboards[BR] & wPawnAttacks;
     U64 bQueens         = board.bitboards[BQ] & wPawnAttacks;
@@ -1872,6 +1871,59 @@ void EvaluatePawnAttacksOnPieces(const Board& board, Score& score)
     score.Add(Bitboard::CountBits(bKnightsBishops) * 180, Bitboard::CountBits(bKnightsBishops) * 220);
     score.Add(Bitboard::CountBits(bRooks) * 300, Bitboard::CountBits(bRooks) * 350);
     score.Add(Bitboard::CountBits(bQueens) * 500, Bitboard::CountBits(bQueens) * 600);
+
+    // 2. Minor Piece Attacks on Queens and Rooks (Discovered Attacks & Hanging Queens)
+    U64 occ = board.occupancies[BOTH];
+
+    // Compute Black minor piece attack map (Bishops + Knights)
+    U64 bMinorAttacks = 0ULL;
+    U64 bBishops = board.bitboards[BB];
+    while (bBishops)
+    {
+        Square sq = (Square)Bitboard::LSBIndex(bBishops);
+        Bitboard::PopBit(bBishops, sq);
+        bMinorAttacks |= AttackTables::BishopAttacks(sq, occ);
+    }
+    U64 bKnights = board.bitboards[BN];
+    while (bKnights)
+    {
+        Square sq = (Square)Bitboard::LSBIndex(bKnights);
+        Bitboard::PopBit(bKnights, sq);
+        bMinorAttacks |= AttackTables::KnightAttacks(sq);
+    }
+
+    // White Queen attacked by Black Minor Pieces
+    U64 wQueensAttackedByMinors = board.bitboards[WQ] & bMinorAttacks;
+    score.Sub(Bitboard::CountBits(wQueensAttackedByMinors) * 350, Bitboard::CountBits(wQueensAttackedByMinors) * 450);
+
+    // White Rook attacked by Black Minor Pieces
+    U64 wRooksAttackedByMinors = board.bitboards[WR] & bMinorAttacks;
+    score.Sub(Bitboard::CountBits(wRooksAttackedByMinors) * 150, Bitboard::CountBits(wRooksAttackedByMinors) * 200);
+
+    // Compute White minor piece attack map
+    U64 wMinorAttacks = 0ULL;
+    U64 wBishops = board.bitboards[WB];
+    while (wBishops)
+    {
+        Square sq = (Square)Bitboard::LSBIndex(wBishops);
+        Bitboard::PopBit(wBishops, sq);
+        wMinorAttacks |= AttackTables::BishopAttacks(sq, occ);
+    }
+    U64 wKnights = board.bitboards[WN];
+    while (wKnights)
+    {
+        Square sq = (Square)Bitboard::LSBIndex(wKnights);
+        Bitboard::PopBit(wKnights, sq);
+        wMinorAttacks |= AttackTables::KnightAttacks(sq);
+    }
+
+    // Black Queen attacked by White Minor Pieces
+    U64 bQueensAttackedByMinors = board.bitboards[BQ] & wMinorAttacks;
+    score.Add(Bitboard::CountBits(bQueensAttackedByMinors) * 350, Bitboard::CountBits(bQueensAttackedByMinors) * 450);
+
+    // Black Rook attacked by White Minor Pieces
+    U64 bRooksAttackedByMinors = board.bitboards[BR] & wMinorAttacks;
+    score.Add(Bitboard::CountBits(bRooksAttackedByMinors) * 150, Bitboard::CountBits(bRooksAttackedByMinors) * 200);
 }
 
 int Evaluate(
@@ -1911,7 +1963,7 @@ int Evaluate(
         board,
         score);
 
-    EvaluatePawnAttacksOnPieces(
+    EvaluatePieceSafetyAndHanging(
         board,
         score);
 
