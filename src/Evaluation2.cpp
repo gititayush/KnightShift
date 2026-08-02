@@ -1889,7 +1889,7 @@ void EvaluatePieceSafetyAndHanging(const Board& board, Score& score)
     {
         Square sq = (Square)Bitboard::LSBIndex(bKnights);
         Bitboard::PopBit(bKnights, sq);
-        bMinorAttacks |= AttackTables::KnightAttacks(sq);
+        bMinorAttacks |= AttackTables::knightAttacks[sq];
     }
 
     // White Queen attacked by Black Minor Pieces
@@ -1914,7 +1914,7 @@ void EvaluatePieceSafetyAndHanging(const Board& board, Score& score)
     {
         Square sq = (Square)Bitboard::LSBIndex(wKnights);
         Bitboard::PopBit(wKnights, sq);
-        wMinorAttacks |= AttackTables::KnightAttacks(sq);
+        wMinorAttacks |= AttackTables::knightAttacks[sq];
     }
 
     // Black Queen attacked by White Minor Pieces
