@@ -137,9 +137,19 @@ void Loop()
 
 
         else if(token == "stop")
-            {
-                Search::stopSearch = true;
-            }
+        {
+            Search::stopSearch = true;
+        }
+        else if(token == "ucinewgame")
+        {
+            TT::Clear();
+            SearchStats::Reset();
+            std::memset(Search::historyTable, 0, sizeof(Search::historyTable));
+            std::memset(Search::killerMoves, 0, sizeof(Search::killerMoves));
+            std::memset(Search::counterMoves, 0, sizeof(Search::counterMoves));
+            std::memset(Search::continuationHistory, 0, sizeof(Search::continuationHistory));
+            Search::stopSearch = false;
+        }
 
 
             else if(token == "go")

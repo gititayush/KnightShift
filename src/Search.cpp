@@ -896,6 +896,28 @@ if(score <= alpha || score >= beta)
         }
     }
 
+    if (bestMove == 0)
+    {
+        MoveList moves;
+        MoveGenerator::Generate(board, moves);
+        for (int i = 0; i < moves.count; i++)
+        {
+            UndoInfo undo;
+            if (board.MakeMove(moves.moves[i], undo))
+            {
+                Side mover = (board.side == WHITE) ? BLACK : WHITE;
+                Square kingSq = board.FindKing(mover);
+                bool check = AttackDetector::IsSquareAttacked(board, kingSq, board.side);
+                board.UndoMove(moves.moves[i], undo);
+                if (!check)
+                {
+                    bestMove = moves.moves[i];
+                    break;
+                }
+            }
+        }
+    }
+
     return bestMove;
 }
 }
