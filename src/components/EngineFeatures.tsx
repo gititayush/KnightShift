@@ -133,6 +133,20 @@ const FEATURES: EngineFeature[] = [
     category: 'Representation',
     description: '64-bit pseudo-random numbers XORed to create unique hash keys for positions, castling & en-passant.',
     details: 'Incremental hash updating in O(1) time per move/unmake move.'
+  },
+  {
+    id: 'polyglot-opening-book',
+    title: 'PolyGlot Opening Book',
+    category: 'Evaluation',
+    description: 'PolyGlot binary book engine playing dynamic GM opening lines in 0ms.',
+    details: 'Weighted random selection across Sicilian, Ruy Lopez, Queen’s Gambit, King’s Indian, French & Caro-Kann.'
+  },
+  {
+    id: 'texel-eval',
+    title: 'Texel Evaluation Tuning',
+    category: 'Evaluation',
+    description: 'Tuned positional parameters, King attack multipliers, and passed pawn rank incentives.',
+    details: 'Optimized piece-square tables, bishop pair bonuses, and king safety attack units.'
   }
 ];
 

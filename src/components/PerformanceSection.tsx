@@ -43,10 +43,10 @@ export const PerformanceSection: React.FC = () => {
               <ShieldCheck className="w-5 h-5 text-blue-400" />
             </div>
             <div className="text-3xl font-extrabold font-mono text-blue-400 mb-1">
-              ~1950 Elo
+              ~2200 Elo
             </div>
-            <div className="text-xs font-mono text-slate-400">
-              Estimated playing strength
+            <div className="text-xs font-mono text-emerald-400">
+              FIDE Master Level
             </div>
           </div>
 
