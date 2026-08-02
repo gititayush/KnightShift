@@ -1,28 +1,40 @@
-import { Chess, Move } from 'chess.js';
+import { Chess, Move, Square } from 'chess.js';
 import { GameReviewReport, MoveAnalysis, MoveClassificationType } from '../types/chess';
 import { evaluateBoard } from './chessEngine';
 
-// Chess.com Win Chance Sigmoid Function
-// Converts Centipawns (-2000 to +2000) into Win Probability (-1.0 to +1.0)
-function getWinChance(evalCp: number): number {
-  return 2 / (1 + Math.exp(-0.00368 * evalCp)) - 1;
-}
+const PIECE_VALS: Record<string, number> = {
+  p: 100, n: 320, b: 330, r: 500, q: 900, k: 20000,
+};
 
-// Chess.com Official CAPS Accuracy Formula
-// Move Accuracy = 100 * (1 - (WinLoss / (1 + WinBefore)))^1.5
-function calculateCapsAccuracy(evalBeforeCp: number, evalAfterCp: number, isWhite: boolean): number {
-  // Get win probability from mover's perspective
-  const winBefore = getWinChance(isWhite ? evalBeforeCp : -evalBeforeCp);
-  const winAfter = getWinChance(isWhite ? evalAfterCp : -evalAfterCp);
+// Calculate true position evaluation incorporating immediate tactical threats & hanging pieces
+function getTacticalEval(game: Chess, isWhite: boolean): number {
+  let baseScore = evaluateBoard(game);
 
-  // Win probability loss (0.0 to 2.0)
-  const winLoss = Math.max(0, winBefore - winAfter);
+  if (game.isCheckmate()) {
+    // If current turn is checkmated, it's -30000 for them
+    return game.turn() === 'w' ? -30000 : 30000;
+  }
 
-  // Chess.com CAPS non-linear scaling formula
-  // Scaled non-linearly: small loss = slight penalty, large loss (blunder) = massive drop down to 0%
-  const accuracy = 100 * Math.pow(Math.max(0, 1 - (winLoss / (1 + Math.max(-0.9, winBefore)))), 1.8);
+  const board = game.board();
+  const sideColor = isWhite ? 'w' : 'b';
+  const enemyColor = isWhite ? 'b' : 'w';
 
-  return Math.min(98, Math.max(0, Math.round(accuracy)));
+  // Deduct for any undefended or underdefended pieces attacked by opponent
+  for (let r = 0; r < 8; r++) {
+    for (let c = 0; c < 8; c++) {
+      const p = board[r][c];
+      if (p && p.color === sideColor) {
+        const sq = `${['a','b','c','d','e','f','g','h'][c]}${8 - r}` as Square;
+        if (game.isAttacked(sq, enemyColor)) {
+          const val = PIECE_VALS[p.type] || 100;
+          // Deduct full piece value for undefended hanging piece
+          baseScore += isWhite ? -(val * 0.9) : (val * 0.9);
+        }
+      }
+    }
+  }
+
+  return baseScore;
 }
 
 export function analyzeGame(
@@ -53,8 +65,12 @@ export function analyzeGame(
     const gameAfter = new Chess(fenAfter);
     const isWhite = step.move.color === 'w';
 
-    const evalBeforeCp = evaluateBoard(gameBefore);
-    const evalAfterCp = evaluateBoard(gameAfter);
+    const evalBeforeCp = getTacticalEval(gameBefore, isWhite);
+    const evalAfterCp = getTacticalEval(gameAfter, isWhite);
+
+    // Centipawn loss from mover's perspective
+    let cpl = isWhite ? (evalBeforeCp - evalAfterCp) : (evalAfterCp - evalBeforeCp);
+    cpl = Math.max(0, cpl);
 
     const legalMoves = gameBefore.moves({ verbose: true });
     let bestScore = isWhite ? -Infinity : Infinity;
@@ -62,7 +78,7 @@ export function analyzeGame(
 
     for (const m of legalMoves) {
       gameBefore.move(m);
-      const score = evaluateBoard(gameBefore);
+      const score = getTacticalEval(gameBefore, isWhite);
       gameBefore.undo();
 
       if (isWhite ? (score > bestScore) : (score < bestScore)) {
@@ -71,51 +87,47 @@ export function analyzeGame(
       }
     }
 
-    // Centipawn loss relative to top move
-    let cpl = isWhite ? (bestScore - evalAfterCp) : (evalAfterCp - bestScore);
-    cpl = Math.max(0, cpl);
+    // Determine move accuracy % non-linearly
+    let moveAccuracy = Math.max(0, 100 - (cpl / 3.0));
 
-    // Dynamic Move Accuracy % using Chess.com CAPS Formula
-    let moveAccuracy = calculateCapsAccuracy(evalBeforeCp, evalAfterCp, isWhite);
-
-    // Strict Classification Thresholds based on CAPS Accuracy & CPL
+    // Classification Rules
     let classification: MoveClassificationType = 'best';
     let symbol = '✓';
     let commentary = `Best move in the position.`;
 
-    // 1. Book Move (Opening plies)
-    if (index < 4) {
+    // 1. Book Moves (Opening 4 plies)
+    if (index < 4 && cpl < 50) {
       classification = 'book';
       symbol = '📖';
       commentary = `Standard opening theory.`;
       moveAccuracy = 100;
     }
-    // 2. Blunder (Accuracy < 25% or CPL >= 250)
-    else if (moveAccuracy <= 25 || cpl >= 250) {
+    // 2. Blunder (Lost >= 250 centipawns or hung major piece)
+    else if (cpl >= 250 || moveAccuracy <= 25) {
       classification = 'blunder';
       symbol = '??';
-      commentary = `Blunder! ${bestMoveObj ? `${bestMoveObj.san} was best.` : ''}`;
-      moveAccuracy = Math.min(moveAccuracy, 15);
+      commentary = `Blunder! ${bestMoveObj ? `${bestMoveObj.san} was much safer.` : 'Gave away material.'}`;
+      moveAccuracy = 0;
     }
-    // 3. Mistake (Accuracy 26% - 60% or CPL 100 - 250)
-    else if (moveAccuracy <= 60 || cpl >= 100) {
+    // 3. Mistake (Lost 100 - 250 centipawns)
+    else if (cpl >= 100 || moveAccuracy <= 60) {
       classification = 'mistake';
       symbol = '?';
-      commentary = `Mistake. ${bestMoveObj ? `${bestMoveObj.san} was much stronger.` : ''}`;
-      moveAccuracy = Math.min(moveAccuracy, 50);
+      commentary = `Mistake. ${bestMoveObj ? `${bestMoveObj.san} was stronger.` : 'Position worsened.'}`;
+      moveAccuracy = 35;
     }
-    // 4. Inaccuracy (Accuracy 61% - 82% or CPL 40 - 100)
-    else if (moveAccuracy <= 82 || cpl >= 40) {
+    // 4. Inaccuracy (Lost 40 - 100 centipawns)
+    else if (cpl >= 40 || moveAccuracy <= 82) {
       classification = 'inaccuracy';
       symbol = '?!';
       commentary = `Inaccuracy. ${bestMoveObj ? `${bestMoveObj.san} was slightly better.` : ''}`;
-      moveAccuracy = Math.min(moveAccuracy, 75);
+      moveAccuracy = 65;
     }
     // 5. Great Move (!)
     else if (cpl <= 10 && (step.move.san.includes('+') || step.move.san.includes('#'))) {
       classification = 'great';
       symbol = '!';
-      commentary = `Great pressuring move!`;
+      commentary = `Great check/pressuring move!`;
       moveAccuracy = 95;
     }
     // 6. Best Move (✓)
@@ -153,7 +165,6 @@ export function analyzeGame(
     });
   });
 
-  // Calculate weighted average accuracy
   const whiteAccuracy = whiteMoveCount > 0 
     ? Math.round(totalWhiteAccuracy / whiteMoveCount) 
     : 100;
