@@ -488,13 +488,8 @@ constexpr int FUTILITY_MARGIN = 120;
 int fullDepth = depth - 1;
 
 int extension = 0;
-// Check Extension (extend when in check)
-if (inCheck && depth > 1)
-{
-    extension = 1;
-}
-// Singular Extension for TT best move at depth >= 8
-else if (depth >= 8 && move == ttMove && !pvNode && !inCheck && ply < 60 && ttMove != 0 && std::abs(ttScore) < 25000)
+// Singular Extension for TT best move at depth >= 7
+if (depth >= 7 && move == ttMove && !pvNode && !inCheck && ply < 60 && ttMove != 0 && std::abs(ttScore) < 20000)
 {
     int singularBeta = ttScore - (depth * 2);
     int singularScore = Negamax(board, (depth - 1) / 2, ply + 1, singularBeta - 1, singularBeta, previousMove, false);
