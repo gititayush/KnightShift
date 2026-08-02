@@ -37,20 +37,20 @@ constexpr int PhaseValue[6] =
     0
 };
 
-constexpr int BISHOP_PAIR_MG = 42;
-constexpr int BISHOP_PAIR_EG = 62;
+constexpr int BISHOP_PAIR_MG = 48;
+constexpr int BISHOP_PAIR_EG = 72;
 
-constexpr int KNIGHT_OUTPOST_MG = 24;
-constexpr int KNIGHT_OUTPOST_EG = 14;
+constexpr int KNIGHT_OUTPOST_MG = 28;
+constexpr int KNIGHT_OUTPOST_EG = 18;
 
-constexpr int BISHOP_OUTPOST_MG = 14;
-constexpr int BISHOP_OUTPOST_EG = 8;
+constexpr int BISHOP_OUTPOST_MG = 16;
+constexpr int BISHOP_OUTPOST_EG = 10;
 
-constexpr int PAWN_SHIELD_BONUS = 22;
+constexpr int PAWN_SHIELD_BONUS = 28;
 
-constexpr int OPEN_FILE_KING_PENALTY = 28;
+constexpr int OPEN_FILE_KING_PENALTY = 32;
 
-constexpr int SEMI_OPEN_FILE_KING_PENALTY = 14;
+constexpr int SEMI_OPEN_FILE_KING_PENALTY = 18;
 
 constexpr int KNIGHT_ATTACK_UNIT = 3;
 constexpr int BISHOP_ATTACK_UNIT = 3;
@@ -73,8 +73,8 @@ constexpr int KING_CENTER_EG = 12;
 constexpr int BLOCKED_PASSER_MG = 20;
 constexpr int BLOCKED_PASSER_EG = 35;
 
-constexpr int ROOK_OPEN_FILE_MG = 34;
-constexpr int ROOK_OPEN_FILE_EG = 24;
+constexpr int ROOK_OPEN_FILE_MG = 38;
+constexpr int ROOK_OPEN_FILE_EG = 28;
 
 constexpr int ROOK_BEHIND_PASSER_MG = 22;
 constexpr int ROOK_BEHIND_PASSER_EG = 36;
