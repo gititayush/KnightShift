@@ -102,18 +102,25 @@ constexpr int MAX_PHASE = 24;
 constexpr int PassedPawnMG[8] =
 {
      0,
-    12,
-    24,
-    42,
-    70,
-   110,
-   160,
+    15,
+    30,
+    55,
+    95,
+   150,
+   220,
      0
 };
 
 constexpr int PassedPawnEG[8] =
 {
-      0
+     0,
+    25,
+    50,
+    95,
+   160,
+   240,
+   350,
+     0
 };
 
 constexpr int ISOLATED_MG = 15;
