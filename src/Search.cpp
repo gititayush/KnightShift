@@ -508,6 +508,8 @@ else if (depth >= 6 && move == ttMove && !pvNode && ply < MAX_PLY - 2 && ttMove 
 }
 
 int searchDepth = fullDepth + extension;
+
+bool reduce =
     legalMoves > 1 &&
     depth >= 3 &&
     !pvNode &&
