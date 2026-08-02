@@ -2,7 +2,7 @@
 #include "MoveOrdering.h"
 #include <utility>
 #include "AttackDetector.h"
-#include "Evaluation.h"
+#include "Evaluation2.h"
 #include "MoveGenerator.h"
 #include "TranspositionTable.h"
 #include "SearchStats.h"
@@ -39,7 +39,7 @@ int Quiescence(
     int beta)
 {
 if(stopSearch)
-    return Evaluation::Evaluate(board);
+    return Evaluation2::Evaluate(board);
 
 Square kingSquare =
     board.FindKing(board.side);
@@ -51,7 +51,7 @@ bool inCheck =
         board.side == WHITE ? BLACK : WHITE);
 
 int standPat =
-    Evaluation::Evaluate(board);
+    Evaluation2::Evaluate(board);
 
     constexpr int DELTA_MARGIN = 900;
 
@@ -62,7 +62,14 @@ int standPat =
         alpha = standPat;
 
     MoveList moves;
-    MoveGenerator::Generate(board, moves);
+    if (inCheck)
+    {
+        MoveGenerator::Generate(board, moves);
+    }
+    else
+    {
+        MoveGenerator::GenerateCaptures(board, moves);
+    }
 
 for(int i = 0; i < moves.count; i++)
 {
@@ -237,7 +244,7 @@ if(TT::Probe(
 }
 
 int staticEval =
-    Evaluation::Evaluate(board);
+    Evaluation2::Evaluate(board);
 
 // =========================
 // Reverse Futility Pruning

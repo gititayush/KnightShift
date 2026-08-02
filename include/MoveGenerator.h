@@ -6,6 +6,7 @@
 namespace MoveGenerator
 {
     void Generate(const Board& board,MoveList& list);
+    void GenerateCaptures(const Board& board, MoveList& list);
 
     void GenerateWhitePawnMoves(
     const Board& board,

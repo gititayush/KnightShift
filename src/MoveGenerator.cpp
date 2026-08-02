@@ -40,6 +40,22 @@ void Generate(const Board& board,MoveList& list)
     GenerateKingMoves(board, list);
 }
 
+void GenerateCaptures(const Board& board, MoveList& list)
+{
+    MoveList allMoves;
+    Generate(board, allMoves);
+    list.Clear();
+
+    for (int i = 0; i < allMoves.count; i++)
+    {
+        Move m = allMoves.moves[i];
+        if (MoveEncoding::IsCapture(m) || MoveEncoding::PromotionPiece(m) != NO_PIECE)
+        {
+            list.Add(m);
+        }
+    }
+}
+
 // void Generate(const Board& board, MoveList& list)
 // {
 //     list.Clear();
