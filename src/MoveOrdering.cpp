@@ -41,7 +41,28 @@ if(MoveEncoding::PromotionPiece(move) != NO_PIECE)
 {
     return 1450000;
 }
-if(!MoveEncoding::IsCapture(move))
+if(MoveEncoding::IsCapture(move))
+{
+    int attacker = static_cast<int>(MoveEncoding::PieceMoved(move)) % 6;
+    int victim   = static_cast<int>(board.pieceOnSquare[MoveEncoding::To(move)]) % 6;
+    int mvvLva   = MVVLVA[attacker][victim];
+
+    int seeVal = SEE::Evaluate(board, move);
+
+    if (seeVal > 0)
+    {
+        return 1500000 + seeVal;
+    }
+    else if (seeVal == 0)
+    {
+        return 1000000 + mvvLva;
+    }
+    else
+    {
+        return 100000 + mvvLva;
+    }
+}
+else
 {
     if(move == Search::killerMoves[0][ply])
         return 900000;
@@ -49,68 +70,32 @@ if(!MoveEncoding::IsCapture(move))
     if(move == Search::killerMoves[1][ply])
         return 800000;
 
-        if(previousMove != 0)
-{
-    Square prevFrom =
-        MoveEncoding::From(previousMove);
+    if(previousMove != 0)
+    {
+        Square prevFrom = MoveEncoding::From(previousMove);
+        Square prevTo   = MoveEncoding::To(previousMove);
 
-    Square prevTo =
-        MoveEncoding::To(previousMove);
+        if(move == Search::counterMoves[prevFrom][prevTo])
+            return 850000;
+    }
 
-    if(move == Search::counterMoves[prevFrom][prevTo])
-        return 850000;
-}
+    Piece piece = MoveEncoding::PieceMoved(move);
+    Square to   = MoveEncoding::To(move);
 
-    Piece piece =
-        MoveEncoding::PieceMoved(move);
-
-    Square to =
-        MoveEncoding::To(move);
-
-    int score =
-        Search::historyTable[piece][to];
+    int score = Search::historyTable[piece][to];
 
     if(previousMove != 0)
     {
-        Piece prevPiece =
-            MoveEncoding::PieceMoved(previousMove);
+        Piece prevPiece = MoveEncoding::PieceMoved(previousMove);
+        Square prevTo   = MoveEncoding::To(previousMove);
 
-        Square prevTo =
-            MoveEncoding::To(previousMove);
-
-        score +=
-            Search::continuationHistory
-            [prevPiece]
-            [prevTo]
-            [piece]
-            [to];
+        score += Search::continuationHistory[prevPiece][prevTo][piece][to];
     }
 
     return 700000 + score;
 }
-    if(MoveEncoding::IsCapture(move))
-    {
-        int attacker = static_cast<int>(MoveEncoding::PieceMoved(move)) % 6;
-        int victim   = static_cast<int>(board.pieceOnSquare[MoveEncoding::To(move)]) % 6;
-        int mvvLva   = MVVLVA[attacker][victim];
 
-        int seeVal = SEE::Evaluate(board, move);
-
-        if (seeVal > 0)
-        {
-            return 1500000 + seeVal;
-        }
-        else if (seeVal == 0)
-        {
-            return 1000000 + mvvLva;
-        }
-        else
-        {
-            return 100000 + mvvLva;
-        }
-    }
-}
-    return 0;
+return 0;
 }
 
 }
