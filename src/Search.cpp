@@ -383,6 +383,7 @@ if(allowNullMove &&
 
 if(depth <= 2 &&
    !pvNode &&
+   !inCheck &&
    legalMoves >= 14 &&
    (
       !MoveEncoding::IsCapture(move) &&
