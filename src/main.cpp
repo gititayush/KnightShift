@@ -15,8 +15,8 @@ int main()
     Zobrist::Initialize();
     TT::Initialize();
 
-    // UCI::Loop();
-    RunTACTests(8);
+    UCI::Loop();
+    // RunTACTests(8);
 
     return 0;
 }
