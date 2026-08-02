@@ -37,6 +37,10 @@ if(move == ttMove && ttMove != 0)
 {
     return 2000000;
 }
+if(MoveEncoding::IsPromotion(move))
+{
+    return 1450000;
+}
 if(!MoveEncoding::IsCapture(move))
 {
     if(move == Search::killerMoves[0][ply])
