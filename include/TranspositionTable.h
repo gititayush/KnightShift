@@ -5,8 +5,9 @@
 
 namespace TT
 {
-extern U64 probes;
-extern U64 hits;
+    extern U64 probes;
+    extern U64 hits;
+
     enum Flag
     {
         EXACT,
@@ -27,6 +28,11 @@ extern U64 hits;
         Move bestMove;
     };
 
+    struct Bucket
+    {
+        Entry entries[4];
+    };
+
     void Initialize();
 
     void Clear();
@@ -38,7 +44,7 @@ extern U64 hits;
         int beta,
         int& score);
 
-Move GetBestMove(U64 hash);
+    Move GetBestMove(U64 hash);
 
     void Store(
         U64 hash,

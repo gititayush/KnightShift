@@ -45,50 +45,44 @@ if(!MoveEncoding::IsCapture(move))
     if(move == Search::killerMoves[1][ply])
         return 800000;
 
-   Piece piece =
-    MoveEncoding::PieceMoved(move);
-
-Square to =
-    MoveEncoding::To(move);
-
-int score =
-    Search::historyTable[piece][to];
-
-if(previousMove != 0)
+        if(previousMove != 0)
 {
-    Piece prevPiece =
-        MoveEncoding::PieceMoved(previousMove);
+    Square prevFrom =
+        MoveEncoding::From(previousMove);
 
     Square prevTo =
         MoveEncoding::To(previousMove);
 
-    score +=
-        Search::continuationHistory
-        [prevPiece]
-        [prevTo]
-        [piece]
-        [to];
+    if(move == Search::counterMoves[prevFrom][prevTo])
+        return 850000;
 }
 
-return 700000 + score;
+    Piece piece =
+        MoveEncoding::PieceMoved(move);
 
-if(previousMove != 0)
-{
-    Piece prevPiece =
-        MoveEncoding::PieceMoved(previousMove);
+    Square to =
+        MoveEncoding::To(move);
 
-    Square prevTo =
-        MoveEncoding::To(previousMove);
+    int score =
+        Search::historyTable[piece][to];
 
-    score +=
-        Search::continuationHistory
-        [prevPiece]
-        [prevTo]
-        [piece]
-        [to];
-}
+    if(previousMove != 0)
+    {
+        Piece prevPiece =
+            MoveEncoding::PieceMoved(previousMove);
 
-return 700000 + score;
+        Square prevTo =
+            MoveEncoding::To(previousMove);
+
+        score +=
+            Search::continuationHistory
+            [prevPiece]
+            [prevTo]
+            [piece]
+            [to];
+    }
+
+    return 700000 + score;
 }
     if(MoveEncoding::IsCapture(move))
 {

@@ -1,10 +1,10 @@
 #include "TranspositionTable.h"
 #include "SearchStats.h"
 
-constexpr int TABLE_SIZE = 1 << 20;
+constexpr int TABLE_SIZE = 1 << 18;
 constexpr int TABLE_MASK = TABLE_SIZE - 1;
 
-TT::Entry table[TABLE_SIZE];
+TT::Bucket table[TABLE_SIZE];
 
 U64 TT::probes = 0;
 U64 TT::hits = 0;
@@ -21,11 +21,14 @@ void TT::Clear()
 
     for(int i = 0; i < TABLE_SIZE; i++)
     {
-        table[i].hash = 0;
-        table[i].depth = -1;
-        table[i].score = 0;
-        table[i].flag = EXACT;
-        table[i].bestMove = 0;
+        for(int j = 0; j < 4; j++)
+        {
+            table[i].entries[j].hash = 0;
+            table[i].entries[j].depth = -1;
+            table[i].entries[j].score = 0;
+            table[i].entries[j].flag = EXACT;
+            table[i].entries[j].bestMove = 0;
+        }
     }
 }
 
@@ -39,18 +42,19 @@ bool TT::Probe(
     SearchStats::ttProbes++;
     probes++;
 
-    Entry& entry =
+    Bucket& bucket =
         table[hash & TABLE_MASK];
 
-    if(entry.hash != hash)
-        return false;
-
-    if(entry.depth < depth)
-        return false;
-
-    switch(entry.flag)
+    for(int i = 0; i < 4; i++)
     {
-    case EXACT:
+        Entry& entry = bucket.entries[i];
+
+        if(entry.hash != hash)
+            continue;
+
+        if(entry.depth < depth)
+            continue;
+
         score = entry.score;
 
         if(score > 29000)
@@ -58,41 +62,31 @@ bool TT::Probe(
         else if(score < -29000)
             score += depth;
 
-        SearchStats::ttHits++;
-        hits++;
-        return true;
-
-    case ALPHA:
-        score = entry.score;
-
-        if(score > 29000)
-            score -= depth;
-        else if(score < -29000)
-            score += depth;
-
-        if(score <= alpha)
+        switch(entry.flag)
         {
+        case EXACT:
             SearchStats::ttHits++;
             hits++;
             return true;
+
+        case ALPHA:
+            if(score <= alpha)
+            {
+                SearchStats::ttHits++;
+                hits++;
+                return true;
+            }
+            break;
+
+        case BETA:
+            if(score >= beta)
+            {
+                SearchStats::ttHits++;
+                hits++;
+                return true;
+            }
+            break;
         }
-        break;
-
-    case BETA:
-        score = entry.score;
-
-        if(score > 29000)
-            score -= depth;
-        else if(score < -29000)
-            score += depth;
-
-        if(score >= beta)
-        {
-            SearchStats::ttHits++;
-            hits++;
-            return true;
-        }
-        break;
     }
 
     return false;
@@ -105,38 +99,72 @@ void TT::Store(
     Flag flag,
     Move bestMove)
 {
-    Entry& entry =
+    Bucket& bucket =
         table[hash & TABLE_MASK];
 
-    // Keep an exact entry of equal or greater depth
-    if(entry.hash == hash &&
-       entry.depth >= depth &&
-       entry.flag == EXACT)
+    Entry* replace = &bucket.entries[0];
+
+    // Same hash? overwrite it.
+    for(int i = 0; i < 4; i++)
     {
-        return;
+        Entry& entry = bucket.entries[i];
+
+        if(entry.hash == hash)
+        {
+            replace = &entry;
+            break;
+        }
     }
 
-    entry.hash = hash;
-    entry.depth = depth;
+    // Empty slot?
+    if(replace->hash != hash)
+    {
+        for(int i = 0; i < 4; i++)
+        {
+            Entry& entry = bucket.entries[i];
+
+            if(entry.hash == 0)
+            {
+                replace = &entry;
+                break;
+            }
+        }
+    }
+
+    // Otherwise replace the shallowest entry.
+    if(replace->hash != hash && replace->hash != 0)
+    {
+        for(int i = 1; i < 4; i++)
+        {
+            if(bucket.entries[i].depth < replace->depth)
+                replace = &bucket.entries[i];
+        }
+    }
+
+    replace->hash = hash;
+    replace->depth = depth;
 
     if(score > 29000)
-        entry.score = score + depth;
+        replace->score = score + depth;
     else if(score < -29000)
-        entry.score = score - depth;
+        replace->score = score - depth;
     else
-        entry.score = score;
+        replace->score = score;
 
-    entry.flag = flag;
-    entry.bestMove = bestMove;
+    replace->flag = flag;
+    replace->bestMove = bestMove;
 }
 
 Move TT::GetBestMove(U64 hash)
 {
-    Entry& entry =
+    Bucket& bucket =
         table[hash & TABLE_MASK];
 
-    if(entry.hash != hash)
-        return 0;
+    for(int i = 0; i < 4; i++)
+    {
+        if(bucket.entries[i].hash == hash)
+            return bucket.entries[i].bestMove;
+    }
 
-    return entry.bestMove;
+    return 0;
 }

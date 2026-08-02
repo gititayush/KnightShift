@@ -23,6 +23,10 @@ namespace Search
 
     extern int historyTable[12][64];
 
+    extern int captureHistory[12][64][12];
+
+    extern Move counterMoves[64][64];
+
     extern int continuationHistory
         [12][64]
         [12][64];

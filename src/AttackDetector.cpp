@@ -45,112 +45,40 @@ else
     }
 }
 
-// Bishop attacks
-const int bishopDr[4] = {1, 1, -1, -1};
-const int bishopDf[4] = {1, -1, 1, -1};
+U64 bishopAttacks =
+    AttackTables::BishopAttacks(
+        square,
+        board.occupancies[BOTH]);
 
-int startRank = square / 8;
-int startFile = square % 8;
+U64 rookAttacks =
+    AttackTables::RookAttacks(
+        square,
+        board.occupancies[BOTH]);
 
-for(int dir = 0; dir < 4; dir++)
+U64 queenAttacks =
+    bishopAttacks | rookAttacks;
+
+if(attacker == WHITE)
 {
-    int r = startRank + bishopDr[dir];
-    int f = startFile + bishopDf[dir];
+    if(bishopAttacks & board.bitboards[WB])
+        return true;
 
-    while(r >= 0 && r < 8 &&
-          f >= 0 && f < 8)
-    {
-        int sq = r * 8 + f;
+    if(rookAttacks & board.bitboards[WR])
+        return true;
 
-        U64 mask = 1ULL << sq;
-
-        if(attacker == WHITE)
-        {
-            if(board.bitboards[WB] & mask)
-                return true;
-        }
-        else
-        {
-            if(board.bitboards[BB] & mask)
-                return true;
-        }
-
-        if(board.occupancies[BOTH] & mask)
-            break;
-
-        r += bishopDr[dir];
-        f += bishopDf[dir];
-    }
+    if(queenAttacks & board.bitboards[WQ])
+        return true;
 }
-
-// Rook attacks
-const int rookDr[4] = {1, -1, 0, 0};
-const int rookDf[4] = {0, 0, 1, -1};
-
-for(int dir = 0; dir < 4; dir++)
+else
 {
-    int r = startRank + rookDr[dir];
-    int f = startFile + rookDf[dir];
+    if(bishopAttacks & board.bitboards[BB])
+        return true;
 
-    while(r >= 0 && r < 8 &&
-          f >= 0 && f < 8)
-    {
-        int sq = r * 8 + f;
+    if(rookAttacks & board.bitboards[BR])
+        return true;
 
-        U64 mask = 1ULL << sq;
-
-        if(attacker == WHITE)
-        {
-            if(board.bitboards[WR] & mask)
-                return true;
-        }
-        else
-        {
-            if(board.bitboards[BR] & mask)
-                return true;
-        }
-
-        if(board.occupancies[BOTH] & mask)
-            break;
-
-        r += rookDr[dir];
-        f += rookDf[dir];
-    }
-}
-
-// Queen attacks
-for(int dir = 0; dir < 8; dir++)
-{
-    const int queenDr[8] = {1, 1, -1, -1, 1, -1, 0, 0};
-    const int queenDf[8] = {1, -1, 1, -1, 0, 0, 1, -1};
-
-    int r = startRank + queenDr[dir];
-    int f = startFile + queenDf[dir];
-
-    while(r >= 0 && r < 8 &&
-          f >= 0 && f < 8)
-    {
-        int sq = r * 8 + f;
-
-        U64 mask = 1ULL << sq;
-
-        if(attacker == WHITE)
-        {
-            if(board.bitboards[WQ] & mask)
-                return true;
-        }
-        else
-        {
-            if(board.bitboards[BQ] & mask)
-                return true;
-        }
-
-        if(board.occupancies[BOTH] & mask)
-            break;
-
-        r += queenDr[dir];
-        f += queenDf[dir];
-    }
+    if(queenAttacks & board.bitboards[BQ])
+        return true;
 }
 
 if(attacker == WHITE)
