@@ -493,8 +493,8 @@ if (givesCheck && depth > 2)
 {
     extension = 1;
 }
-// Singular Extension for TT best move
-else if (depth >= 6 && move == ttMove && !pvNode && !inCheck && ply < 80 && ttMove != 0)
+// Singular Extension for TT best move (skip on mate scores)
+else if (depth >= 6 && move == ttMove && !pvNode && !inCheck && ply < 80 && ttMove != 0 && std::abs(ttScore) < 25000)
 {
     int singularBeta = ttScore - (depth * 2);
     int singularScore = Negamax(board, (depth - 1) / 2, ply + 1, singularBeta - 1, singularBeta, previousMove, false);
