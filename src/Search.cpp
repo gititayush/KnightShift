@@ -460,9 +460,9 @@ bool givesCheck =
 
 bool reduce =
     legalMoves > 1 &&
-    depth >= 3 &&
+    depth >= 4 &&
     !pvNode &&
-    legalMoves >= 4 &&
+    legalMoves >= 5 &&
     !MoveEncoding::IsCapture(move) &&
     !givesCheck &&
     move != killerMoves[0][ply] &&
@@ -474,13 +474,13 @@ if(reduce)
 
 int reduction = 1;
 
-if(depth >= 6)
-    reduction++;
-
 if(depth >= 10)
     reduction++;
 
-if(legalMoves >= 10)
+if(depth >= 14)
+    reduction++;
+
+if(legalMoves >= 16)
     reduction++;
 
 if(reduction > 3)

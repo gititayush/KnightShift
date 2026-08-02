@@ -17,8 +17,8 @@ int main()
     TT::Initialize();
     OpeningBook::Initialize();
 
-    UCI::Loop();
-    // RunTACTests(6);
+    // UCI::Loop();
+    RunTACTests(6);
 
     return 0;
 }

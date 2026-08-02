@@ -142,12 +142,6 @@ Move GetBookMove(const Board& board)
             Square from = MoveEncoding::From(m);
             Square to = MoveEncoding::To(m);
 
-            // Specific Giuoco Piano line fix: After 11. bxc5 as Black, play 11... dxc5
-            if (board.pieceOnSquare[C5] != NO_PIECE && MoveEncoding::From(m) == D6 && MoveEncoding::To(m) == C5)
-            {
-                return m;
-            }
-
             // Move 1 as White: e2e4 (45%), d2d4 (35%), c2c4 (12%), g1f3 (8%)
             if (totalPlies == 0)
             {
