@@ -37,7 +37,7 @@ if(move == ttMove && ttMove != 0)
 {
     return 2000000;
 }
-if(MoveEncoding::IsPromotion(move))
+if(MoveEncoding::PromotionPiece(move) != NO_PIECE)
 {
     return 1450000;
 }

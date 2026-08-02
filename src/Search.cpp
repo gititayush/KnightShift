@@ -83,15 +83,17 @@ for(int i = 0; i < moves.count; i++)
 
     Move move = moves.moves[i];
 
+        bool isPromotion = MoveEncoding::PromotionPiece(move) != NO_PIECE;
+
         if(!inCheck &&
             !MoveEncoding::IsCapture(move) &&
-            !MoveEncoding::IsPromotion(move))
+            !isPromotion)
             {
                 continue;
             }
 
         if(!inCheck &&
-            !MoveEncoding::IsPromotion(move) &&
+            !isPromotion &&
             !SEE::IsGoodCapture(board, move))
         {
             continue;
