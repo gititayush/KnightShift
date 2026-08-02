@@ -27,6 +27,7 @@ add_executable(
     src/SearchStats.cpp
     src/SEE.cpp
     src/Evaluation2.cpp
+    src/OpeningBook.cpp
 )
 
 target_include_directories(

@@ -34,6 +34,7 @@ RUN g++ -O3 -std=c++20 -I include -I src \
     src/SearchStats.cpp \
     src/SEE.cpp \
     src/Evaluation2.cpp \
+    src/OpeningBook.cpp \
     -o KnightShift -pthread
 
 EXPOSE 8080
