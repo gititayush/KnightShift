@@ -126,7 +126,7 @@ int Evaluate(const Board& board, Move move)
 
     Piece currentAttackerPiece = attackerPiece;
 
-    while (true)
+    while (d < 30)
     {
         d++;
         gain[d] = PieceValue[currentAttackerPiece] - gain[d - 1];
