@@ -19,3 +19,4 @@ Makefile
 
 # Debug
 *.pdb
+node_modules
